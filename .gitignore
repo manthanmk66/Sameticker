@@ -42,3 +42,6 @@ next-env.d.ts
 
 # local secrets
 .env.local
+
+# typescript incremental build info
+*.tsbuildinfo
