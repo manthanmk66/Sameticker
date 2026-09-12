@@ -1,103 +1,75 @@
-import Image from "next/image";
+import { HeroComparison } from "@/components/hero-comparison";
+import { TokenTable } from "@/components/token-table";
+import { GapChartLazy } from "@/components/gap-chart-lazy";
+import { SiteFooter } from "@/components/site-footer";
+import { site } from "@/lib/site";
+import { getToken, tokenFile, tokens } from "@/lib/tokens";
+
+function SectionHeading({
+  index,
+  title,
+  children,
+}: {
+  index: string;
+  title: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="mb-6">
+      <div className="flex items-baseline gap-3">
+        <span className="font-mono text-[11px] tracking-[0.12em] text-primary/70">
+          {index}
+        </span>
+        <h2 className="text-[19px] font-semibold tracking-tight">{title}</h2>
+      </div>
+      {children && (
+        <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-muted-foreground">
+          {children}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [aId, bId] = site.heroPair;
+  const a = getToken(aId);
+  const b = getToken(bId);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+  // A misconfigured hero pair is a data error, not a runtime surprise.
+  if (!a || !b) {
+    throw new Error(
+      `site.heroPair references unknown token id: ${!a ? aId : bId}`,
+    );
+  }
+
+  const siblingCount = tokens.filter((t) => t.company === a.company).length;
+
+  return (
+    <main className="mx-auto w-full max-w-5xl px-5 pb-16 pt-14 sm:px-8 sm:pt-20">
+      <HeroComparison pair={[a, b]} siblingCount={siblingCount} />
+
+      <section className="mt-20 sm:mt-24">
+        <SectionHeading index="01" title="What you actually own">
+          Every token we have read the documents for. Sort any column; select a
+          row to open the full ownership record. Anything we could not confirm
+          from source reads &ldquo;Not yet verified&rdquo; rather than being
+          hidden or guessed.
+        </SectionHeading>
+        <TokenTable tokens={tokens} />
+      </section>
+
+      <section className="mt-20 sm:mt-24">
+        <SectionHeading index="02" title="The weekend gap">
+          The on-chain price against the last traditional-market close.
+        </SectionHeading>
+        <GapChartLazy tokens={tokens} />
+      </section>
+
+      <SiteFooter
+        tokenCount={tokens.length}
+        lastUpdated={tokenFile.lastUpdated}
+      />
+    </main>
   );
 }
