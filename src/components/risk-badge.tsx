@@ -25,8 +25,8 @@ export function RiskBadge({
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-sm border px-2 py-0.5",
-        "font-mono text-[11px] uppercase tracking-[0.08em]",
+        "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border px-1.5 py-0.5",
+        "font-mono text-[length:var(--text-xs)] uppercase tracking-[0.1em]",
         STYLES[level],
         className,
       )}
@@ -34,7 +34,7 @@ export function RiskBadge({
       <span
         aria-hidden
         className={cn(
-          "size-1.5 rounded-full",
+          "size-1.5",
           level === "low" && "bg-risk-low",
           level === "medium" && "bg-risk-medium",
           level === "high" && "bg-risk-high",
@@ -49,7 +49,7 @@ export function RiskBadge({
 /** Shown on any token with no source URL. Should never appear in practice. */
 export function NoSourceBadge() {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-sm border border-risk-high/45 bg-risk-high/10 px-2 py-0.5 font-mono text-[11px] uppercase tracking-[0.08em] text-risk-high">
+    <span className="inline-flex items-center gap-1.5 border border-risk-high/45 bg-risk-high/10 px-1.5 py-0.5 font-mono text-[length:var(--text-xs)] uppercase tracking-[0.1em] text-risk-high">
       No source on file
     </span>
   );

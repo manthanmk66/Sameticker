@@ -12,8 +12,8 @@ const GapChart = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[356px] items-center justify-center rounded-md border border-border bg-card/30 sm:h-[396px]">
-        <span className="font-mono text-[12px] uppercase tracking-[0.1em] text-muted-foreground">
+      <div className="flex h-[356px] items-center justify-center border border-rule sm:h-[396px]">
+        <span className="font-mono text-[length:var(--text-xs)] uppercase tracking-[var(--tracking-label)] text-muted-foreground">
           Loading chart…
         </span>
       </div>

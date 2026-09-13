@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { HeroComparison } from "@/components/hero-comparison";
 import { TokenTable } from "@/components/token-table";
 import { GapChartLazy } from "@/components/gap-chart-lazy";
@@ -5,29 +6,28 @@ import { SiteFooter } from "@/components/site-footer";
 import { site } from "@/lib/site";
 import { getToken, tokenFile, tokens } from "@/lib/tokens";
 
-function SectionHeading({
-  index,
+/**
+ * S2 · Hanging — the heading floats in negative space above its section.
+ * No numeral, no rule, no left-margin label: the space is the separator.
+ */
+function SectionHead({
   title,
   children,
 }: {
-  index: string;
   title: string;
   children?: React.ReactNode;
 }) {
   return (
-    <div className="mb-6">
-      <div className="flex items-baseline gap-3">
-        <span className="font-mono text-[11px] tracking-[0.12em] text-primary/70">
-          {index}
-        </span>
-        <h2 className="text-[19px] font-semibold tracking-tight">{title}</h2>
-      </div>
+    <header className="mb-8 sm:mb-10">
+      <h2 className="text-[length:var(--text-display-s)] font-[560] leading-[1.05] tracking-[-0.03em] text-ink">
+        {title}
+      </h2>
       {children && (
-        <p className="mt-2 max-w-2xl text-[13.5px] leading-relaxed text-muted-foreground">
+        <p className="mt-3 max-w-[52ch] text-[length:var(--text-md)] leading-relaxed text-muted-foreground">
           {children}
         </p>
       )}
-    </div>
+    </header>
   );
 }
 
@@ -38,38 +38,59 @@ export default function Home() {
 
   // A misconfigured hero pair is a data error, not a runtime surprise.
   if (!a || !b) {
-    throw new Error(
-      `site.heroPair references unknown token id: ${!a ? aId : bId}`,
-    );
+    throw new Error(`site.heroPair references unknown token id: ${!a ? aId : bId}`);
   }
 
-  const siblingCount = tokens.filter((t) => t.company === a.company).length;
+  const siblings = tokens.filter((t) => t.company === a.company);
+  const issuerCount = new Set(tokens.map((t) => t.issuer)).size;
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-5 pb-16 pt-14 sm:px-8 sm:pt-20">
-      <HeroComparison pair={[a, b]} siblingCount={siblingCount} />
+    <div className="min-h-dvh">
+      {/* N9 · Edge-aligned minimal. The empty middle is the design; filling it
+          with a link row would make the standard AI nav with extra steps. */}
+      <header className="flex items-center justify-between gap-4 px-[var(--page-gutter)] py-5">
+        <span className="font-mono text-[length:var(--text-sm)] tracking-[0.18em] text-ink">
+          SAME<span className="text-primary">TICKER</span>
+        </span>
+        <Link
+          href={site.repoUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 whitespace-nowrap border border-rule px-3 py-1.5 font-mono text-[length:var(--text-xs)] uppercase tracking-[0.14em] text-ink-2 transition-colors duration-[var(--dur-short)] ease-[var(--ease-out)] hover:border-rule-2 hover:text-ink active:bg-paper-2"
+        >
+          Source
+        </Link>
+      </header>
 
-      <section className="mt-20 sm:mt-24">
-        <SectionHeading index="01" title="What you actually own">
-          Every token we have read the documents for. Sort any column; select a
-          row to open the full ownership record. Anything we could not confirm
-          from source reads &ldquo;Not yet verified&rdquo; rather than being
-          hidden or guessed.
-        </SectionHeading>
-        <TokenTable tokens={tokens} />
-      </section>
+      <main className="px-[var(--page-gutter)] pb-[var(--space-2xl)]">
+        <div className="mx-auto w-full max-w-[76rem]">
+          <HeroComparison pair={[a, b]} siblings={siblings} />
 
-      <section className="mt-20 sm:mt-24">
-        <SectionHeading index="02" title="The weekend gap">
-          The on-chain price against the last traditional-market close.
-        </SectionHeading>
-        <GapChartLazy tokens={tokens} />
-      </section>
+          <section>
+            <SectionHead title="What you actually own">
+              Every token whose documents we have read. Sort any column, open any
+              row. Anything we could not confirm from source reads &ldquo;Not yet
+              verified&rdquo; rather than being hidden or guessed.
+            </SectionHead>
+            <TokenTable tokens={tokens} />
+          </section>
+
+          <section className="pt-[var(--space-2xl)] sm:pt-[var(--space-3xl)]">
+            <SectionHead title="The weekend gap">
+              On-chain price against the last traditional-market close.
+            </SectionHead>
+            <GapChartLazy tokens={tokens} />
+          </section>
+        </div>
+      </main>
 
       <SiteFooter
         tokenCount={tokens.length}
+        issuerCount={issuerCount}
+        company={a.company}
+        siblingCount={siblings.length}
         lastUpdated={tokenFile.lastUpdated}
       />
-    </main>
+    </div>
   );
 }

@@ -1,3 +1,4 @@
+@import "./tokens.css";
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -128,44 +129,53 @@
     @apply font-sans;
   }
 }
-/* ── SameTicker theme ──────────────────────────────────────────────
-   Financial-terminal palette. Dark ground, one accent (amber), risk
-   colours reserved exclusively for the risk badges. No gradients. */
+/* ── SameTicker · Midnight ─────────────────────────────────────────
+   Every value below is a reference to a token in tokens.css. No raw
+   colour is declared here — that is what keeps the system portable. */
 :root,
 .dark {
-  --background: oklch(0.16 0.006 260);
-  --foreground: oklch(0.93 0.004 260);
-  --card: oklch(0.196 0.007 260);
-  --card-foreground: oklch(0.93 0.004 260);
-  --popover: oklch(0.196 0.007 260);
-  --popover-foreground: oklch(0.93 0.004 260);
-  --primary: oklch(0.83 0.145 85);
-  --primary-foreground: oklch(0.18 0.01 85);
-  --secondary: oklch(0.25 0.008 260);
-  --secondary-foreground: oklch(0.93 0.004 260);
-  --muted: oklch(0.24 0.008 260);
-  --muted-foreground: oklch(0.768 0.008 260);
-  --accent: oklch(0.26 0.009 260);
-  --accent-foreground: oklch(0.93 0.004 260);
-  --destructive: oklch(0.63 0.19 25);
-  --border: oklch(0.29 0.009 260);
-  --input: oklch(0.29 0.009 260);
-  --ring: oklch(0.83 0.145 85);
-  --radius: 0.25rem;
-
-  --risk-low: oklch(0.76 0.16 155);
-  --risk-medium: oklch(0.82 0.15 80);
-  --risk-high: oklch(0.68 0.19 22);
-  --risk-unknown: oklch(0.75 0.008 260);
-  --chain: oklch(0.78 0.13 230);
+  --background: var(--color-paper);
+  --foreground: var(--color-ink);
+  --card: var(--color-paper-2);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-paper-2);
+  --popover-foreground: var(--color-ink);
+  --primary: var(--color-accent);
+  --primary-foreground: var(--color-accent-ink);
+  --secondary: var(--color-paper-3);
+  --secondary-foreground: var(--color-ink);
+  --muted: var(--color-paper-3);
+  --muted-foreground: var(--color-muted);
+  --accent: var(--color-paper-3);
+  --accent-foreground: var(--color-ink);
+  --destructive: var(--color-risk-high);
+  --border: var(--color-rule);
+  --input: var(--color-rule);
+  --ring: var(--color-focus);
+  --radius: var(--radius-card);
 }
 
+/* Tailwind v4 only mints utilities from --color-* declared inside @theme, so
+   the tokens are re-exported here. `accent` is deliberately absent: shadcn
+   already owns that name for a surface, and the blue lives on `primary`. */
 @theme inline {
-  --color-risk-low: var(--risk-low);
-  --color-risk-medium: var(--risk-medium);
-  --color-risk-high: var(--risk-high);
-  --color-risk-unknown: var(--risk-unknown);
-  --color-chain: var(--chain);
+  --color-ink: var(--color-ink);
+  --color-ink-2: var(--color-ink-2);
+  --color-paper: var(--color-paper);
+  --color-paper-2: var(--color-paper-2);
+  --color-paper-3: var(--color-paper-3);
+  --color-rule: var(--color-rule);
+  --color-rule-2: var(--color-rule-2);
+  --color-risk-low: var(--color-risk-low);
+  --color-risk-medium: var(--color-risk-medium);
+  --color-risk-high: var(--color-risk-high);
+  --color-risk-unknown: var(--color-risk-unknown);
+}
+
+/* gate 62 — clip, never hidden: `hidden` kills position:sticky on ancestors. */
+html,
+body {
+  overflow-x: clip;
 }
 
 html {
@@ -174,16 +184,45 @@ html {
 }
 
 body {
-  background: var(--background);
+  background: var(--color-paper);
+  color: var(--color-ink);
   font-feature-settings: "cv05", "ss01";
 }
 
-/* Tabular figures everywhere numbers are compared down a column. */
+/* gate 63 — a 40-char ticker or mint must never push the page sideways. */
+h1,
+h2,
+h3,
+.wrap-anywhere {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+/* Numbers that sit in a column are compared down it, so they must align. */
 .tnum {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
 
+/* Hairline is the divider language of this build — not card borders. */
+.rule-top {
+  border-top: var(--rule-hair) solid var(--color-rule);
+}
+
 ::selection {
-  background: oklch(0.83 0.145 85 / 0.28);
+  background: var(--color-accent-quiet);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

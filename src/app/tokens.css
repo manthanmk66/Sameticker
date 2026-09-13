@@ -1,0 +1,80 @@
+/* Hallmark · genre: atmospheric · macrostructure: Split Studio · theme: Midnight
+ * enrichment: none (typography only) · nav: N9 edge-aligned · footer: Ft5 statement
+ * axes: paper=dark · display=geometric-sans · accent=cool(220)
+ * Deviation: no radial blooms. The brief bans gradients and the content is dense
+ * legal reference — atmosphere would compete with the data. Hairlines retained
+ * over elevated cards for the same reason.
+ * pre-emit critique: P5 H5 E5 S5 R5 V4
+ * contrast: pass (46-50) · nav: N9 · footer: Ft5 · slop: pass (51-55)
+ * knobs: diptych=7fr/5fr · comparison=read-across · divider=hairline · affordance=square
+ */
+
+:root {
+  /* ── Paper · cool charcoal, tinted toward the accent. Never pure black. ── */
+  --color-paper: oklch(15% 0.022 250);
+  --color-paper-2: oklch(19.5% 0.024 250);
+  --color-paper-3: oklch(24% 0.026 250);
+
+  --color-rule: oklch(31% 0.024 245);
+  --color-rule-2: oklch(44% 0.022 240);
+
+  /* Muted sits at 76.8% L: anything lower fails 4.5:1 at the small mono sizes
+     this page leans on. Verified with Lighthouse, not eyeballed. */
+  --color-muted: oklch(76.8% 0.018 240);
+  --color-ink-2: oklch(86% 0.012 235);
+  --color-ink: oklch(95% 0.008 230);
+
+  /* ── Accent · cool. Deliberately NOT amber: amber is the medium-risk badge,
+     and the accent must never be confusable with a risk signal. ── */
+  --color-accent: oklch(74% 0.082 232);
+  --color-accent-quiet: oklch(74% 0.082 232 / 0.16);
+  --color-accent-ink: oklch(16% 0.02 250);
+  --color-focus: oklch(84% 0.12 232);
+
+  /* ── Risk · semantic only. Never borrowed for decoration. ── */
+  --color-risk-low: oklch(76% 0.16 155);
+  --color-risk-medium: oklch(82% 0.15 80);
+  --color-risk-high: oklch(70% 0.19 22);
+  --color-risk-unknown: oklch(75% 0.012 245);
+
+  /* ── Type ── */
+  --font-display: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --display-weight: 560;
+  --tracking-display: -0.035em;
+  --tracking-label: 0.14em;
+
+  --text-display: clamp(2.25rem, 5.4vw + 0.6rem, 4.5rem);
+  --text-display-s: clamp(1.5rem, 2.2vw + 0.9rem, 2.125rem);
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.0625rem;
+
+  /* ── 4pt scale ── */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
+  --space-2xl: 4.5rem;
+  --space-3xl: 7rem;
+
+  --page-gutter: clamp(1.125rem, 4vw, 3.5rem);
+  --measure: 62ch;
+
+  /* ── Technical theme: square. No pills, no soft cards. ── */
+  --radius-card: 0px;
+  --radius-pill: 0px;
+  --radius-input: 0px;
+  --rule-hair: 1px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+}
