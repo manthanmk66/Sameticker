@@ -3,6 +3,7 @@ import { HeroComparison } from "@/components/hero-comparison";
 import { TokenTable } from "@/components/token-table";
 import { GapChartLazy } from "@/components/gap-chart-lazy";
 import { SiteFooter } from "@/components/site-footer";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { site } from "@/lib/site";
 import { fetchMintAuthorities } from "@/lib/mint-authority";
 import { fetchPreStocks } from "@/lib/prestocks";
@@ -67,6 +68,8 @@ export default async function Home() {
         <span className="font-mono text-[length:var(--text-sm)] tracking-[0.18em] text-ink">
           SAME<span className="text-primary">TICKER</span>
         </span>
+        <div className="flex shrink-0 items-center gap-2">
+        <ThemeToggle />
         <Link
           href={site.repoUrl}
           target="_blank"
@@ -75,6 +78,7 @@ export default async function Home() {
         >
           Source
         </Link>
+        </div>
       </header>
 
       <main className="px-[var(--page-gutter)] pb-[var(--space-2xl)]">

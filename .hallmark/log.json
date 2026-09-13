@@ -8,6 +8,7 @@
     "enrichment": "none",
     "nav": "N9",
     "footer": "Ft5",
-    "brief": "SameTicker · tokenized-stock ownership decoder · redesign"
+    "brief": "SameTicker \u00b7 tokenized-stock ownership decoder \u00b7 redesign",
+    "themes": "light (:root) + dark (.dark) \u00b7 react-theme-switch-animation POLYGON_GRADIENT"
   }
 ]

@@ -4,40 +4,14 @@
  * Deviation: no radial blooms. The brief bans gradients and the content is dense
  * legal reference — atmosphere would compete with the data. Hairlines retained
  * over elevated cards for the same reason.
+ * themes: light (:root) + dark (.dark) · switcher: react-theme-switch-animation
  * pre-emit critique: P5 H5 E5 S5 R5 V4
  * contrast: pass (46-50) · nav: N9 · footer: Ft5 · slop: pass (51-55)
  * knobs: diptych=7fr/5fr · comparison=read-across · divider=hairline · affordance=square
  */
 
+/* ── Shared · type, space, shape, motion. Theme-independent. ─────── */
 :root {
-  /* ── Paper · cool charcoal, tinted toward the accent. Never pure black. ── */
-  --color-paper: oklch(15% 0.022 250);
-  --color-paper-2: oklch(19.5% 0.024 250);
-  --color-paper-3: oklch(24% 0.026 250);
-
-  --color-rule: oklch(31% 0.024 245);
-  --color-rule-2: oklch(44% 0.022 240);
-
-  /* Muted sits at 76.8% L: anything lower fails 4.5:1 at the small mono sizes
-     this page leans on. Verified with Lighthouse, not eyeballed. */
-  --color-muted: oklch(76.8% 0.018 240);
-  --color-ink-2: oklch(86% 0.012 235);
-  --color-ink: oklch(95% 0.008 230);
-
-  /* ── Accent · cool. Deliberately NOT amber: amber is the medium-risk badge,
-     and the accent must never be confusable with a risk signal. ── */
-  --color-accent: oklch(74% 0.082 232);
-  --color-accent-quiet: oklch(74% 0.082 232 / 0.16);
-  --color-accent-ink: oklch(16% 0.02 250);
-  --color-focus: oklch(84% 0.12 232);
-
-  /* ── Risk · semantic only. Never borrowed for decoration. ── */
-  --color-risk-low: oklch(76% 0.16 155);
-  --color-risk-medium: oklch(82% 0.15 80);
-  --color-risk-high: oklch(70% 0.19 22);
-  --color-risk-unknown: oklch(75% 0.012 245);
-
-  /* ── Type ── */
   --font-display: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-body: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
@@ -53,7 +27,6 @@
   --text-md: 0.9375rem;
   --text-lg: 1.0625rem;
 
-  /* ── 4pt scale ── */
   --space-3xs: 0.25rem;
   --space-2xs: 0.5rem;
   --space-xs: 0.75rem;
@@ -67,7 +40,7 @@
   --page-gutter: clamp(1.125rem, 4vw, 3.5rem);
   --measure: 62ch;
 
-  /* ── Technical theme: square. No pills, no soft cards. ── */
+  /* Technical theme: square. No pills, no soft cards. */
   --radius-card: 0px;
   --radius-pill: 0px;
   --radius-input: 0px;
@@ -77,4 +50,65 @@
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --dur-micro: 120ms;
   --dur-short: 220ms;
+}
+
+/* ── LIGHT · default. Paper tinted cool so it reads as the same system
+   as Midnight, not a separate site. Never pure white. ──────────────── */
+:root {
+  color-scheme: light;
+
+  --color-paper: oklch(98.5% 0.004 250);
+  --color-paper-2: oklch(96.5% 0.006 250);
+  --color-paper-3: oklch(93.5% 0.008 250);
+
+  --color-rule: oklch(88% 0.008 250);
+  --color-rule-2: oklch(76% 0.010 245);
+
+  --color-muted: oklch(46% 0.014 245);
+  --color-ink-2: oklch(32% 0.012 245);
+  --color-ink: oklch(18% 0.014 250);
+
+  --color-accent: oklch(46% 0.100 232);
+  --color-accent-quiet: oklch(46% 0.100 232 / 0.12);
+  --color-accent-ink: oklch(98.5% 0.004 250);
+  --color-focus: oklch(48% 0.130 232);
+
+  /* Risk colours are re-cut per theme, not re-used: the dark-mode values
+     sit at 70-82% lightness and would fail 4.5:1 on light paper. Verified
+     by computation, not by eye — the worst pair here is 5.53:1. */
+  --color-risk-low: oklch(44% 0.130 155);
+  --color-risk-medium: oklch(48% 0.120 70);
+  --color-risk-high: oklch(48% 0.180 25);
+  --color-risk-unknown: oklch(46% 0.010 245);
+}
+
+/* ── DARK · Midnight. Cool charcoal, never pure black. ─────────────── */
+.dark {
+  color-scheme: dark;
+
+  --color-paper: oklch(15% 0.022 250);
+  --color-paper-2: oklch(19.5% 0.024 250);
+  --color-paper-3: oklch(24% 0.026 250);
+
+  --color-rule: oklch(31% 0.024 245);
+  --color-rule-2: oklch(44% 0.022 240);
+
+  /* 76.8% L is the floor that holds 4.5:1 at the small mono sizes this
+     page leans on. Lower reads better and fails. */
+  --color-muted: oklch(76.8% 0.018 240);
+  --color-ink-2: oklch(86% 0.012 235);
+  --color-ink: oklch(95% 0.008 230);
+
+  /* Muted steel: deliberately NOT amber (that is the medium-risk badge),
+     and lower-chroma than every risk colour — risk is the only thing on
+     this page allowed to shout. */
+  --color-accent: oklch(74% 0.082 232);
+  --color-accent-quiet: oklch(74% 0.082 232 / 0.16);
+  --color-accent-ink: oklch(16% 0.020 250);
+  --color-focus: oklch(84% 0.120 232);
+
+  --color-risk-low: oklch(76% 0.16 155);
+  --color-risk-medium: oklch(82% 0.15 80);
+  --color-risk-high: oklch(70% 0.19 22);
+  --color-risk-unknown: oklch(75% 0.012 245);
 }

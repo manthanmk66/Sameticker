@@ -26,11 +26,25 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   // The font variables must live on <html>: globals.css applies font-sans
   // there, and a variable defined only on <body> would not resolve for it.
+  // The `dark` class is NOT set here — the script below sets it before first
+  // paint, which is the only way to avoid a light flash on a dark-first page.
   return (
-    <html
-      lang="en"
-      className={`dark ${geistSans.variable} ${geistMono.variable}`}
-    >
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <head>
+        {/*
+          Dark is the designed default, so an unset preference is seeded to
+          dark rather than left empty. Seeding (instead of only adding the
+          class) keeps localStorage in sync with what is rendered — the theme
+          hook reads the same key, and would otherwise think the page is light
+          and no-op on the first click.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(!localStorage.theme)localStorage.theme='dark';if(localStorage.theme==='dark')document.documentElement.classList.add('dark')}catch(e){document.documentElement.classList.add('dark')}",
+          }}
+        />
+      </head>
       <body className="antialiased">
         {children}
       </body>
