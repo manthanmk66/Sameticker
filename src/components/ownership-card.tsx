@@ -27,14 +27,14 @@ function Field({
 }) {
   const unverified = typeof value !== "object" && isUnverified(value);
   return (
-    <div className={cn("min-w-0 border-t border-border/60 py-3", className)}>
-      <dt className="font-mono text-[10.5px] uppercase tracking-[0.11em] text-muted-foreground">
+    <div className={cn("min-w-0 rule-top py-3", className)}>
+      <dt className="font-mono text-[length:var(--text-xs)] uppercase tracking-[var(--tracking-label)] text-muted-foreground">
         {label}
       </dt>
       <dd
         className={cn(
-          "mt-1.5 text-[13.5px] leading-relaxed",
-          mono && "font-mono text-[12.5px]",
+          "mt-1.5 text-[length:var(--text-sm)] leading-relaxed",
+          mono && "font-mono",
           unverified
             ? "text-muted-foreground italic"
             : "text-foreground/90",
@@ -49,8 +49,8 @@ function Field({
 function SourceList({ label, urls }: { label: string; urls: string[] }) {
   if (urls.length === 0) return null;
   return (
-    <div className="border-t border-border/60 py-3">
-      <dt className="font-mono text-[10.5px] uppercase tracking-[0.11em] text-muted-foreground">
+    <div className="rule-top py-3">
+      <dt className="font-mono text-[length:var(--text-xs)] uppercase tracking-[var(--tracking-label)] text-muted-foreground">
         {label}
       </dt>
       <dd className="mt-2 flex flex-col gap-1.5">
@@ -60,7 +60,7 @@ function SourceList({ label, urls }: { label: string; urls: string[] }) {
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="break-all font-mono text-[11.5px] text-chain/85 underline decoration-chain/25 underline-offset-[3px] transition-colors hover:text-chain hover:decoration-chain/60"
+            className="break-all font-mono text-[length:var(--text-xs)] text-primary underline decoration-primary/25 underline-offset-[3px] transition-colors duration-[var(--dur-short)] hover:decoration-primary active:text-ink"
           >
             {url.replace(/^https?:\/\//, "")}
           </Link>
@@ -74,15 +74,15 @@ export function OwnershipCard({ token }: { token: Token }) {
   const mintMissing = token.mintAddress === NEEDS_INPUT;
 
   return (
-    <div className="bg-card/40 px-4 pb-5 pt-1 sm:px-6">
+    <div className="px-3 pb-6 pt-1 sm:px-4">
       {token.sources.length === 0 && (
         <div className="pt-4">
           <NoSourceBadge />
         </div>
       )}
 
-      <p className="max-w-2xl border-l-2 border-primary/45 py-1 pl-3 text-[13.5px] leading-relaxed text-foreground/80 sm:mt-4">
-        <span className="font-medium text-foreground">
+      <p className="mt-4 max-w-[62ch] text-[length:var(--text-sm)] leading-relaxed text-ink-2">
+        <span className="text-primary">
           {INSTRUMENT_LABELS[token.instrumentType]}.
         </span>{" "}
         {INSTRUMENT_MEANING[token.instrumentType]}
@@ -102,7 +102,7 @@ export function OwnershipCard({ token }: { token: Token }) {
                 href={`https://solscan.io/token/${token.mintAddress}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="break-all text-chain/85 underline decoration-chain/25 underline-offset-[3px] transition-colors hover:text-chain hover:decoration-chain/60"
+                className="break-all text-primary underline decoration-primary/25 underline-offset-[3px] transition-colors duration-[var(--dur-short)] hover:decoration-primary active:text-ink"
               >
                 {token.mintAddress}
               </Link>

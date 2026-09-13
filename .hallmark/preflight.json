@@ -1,0 +1,10 @@
+{
+  "date": "2026-09-13",
+  "framework": "Next.js 15 (app router)",
+  "fontStack": "Geist + Geist Mono via next/font (src/app/layout.tsx)",
+  "palette": "OKLCH custom properties (src/app/tokens.css, mapped in globals.css)",
+  "motion": "none installed — motion-cut project",
+  "spacing": "Tailwind v4 @theme inline, no config file; 4pt scale in tokens.css",
+  "preserved": ["Geist pairing", "OKLCH token approach", "dark ground", "risk-colour semantics"],
+  "introduced": ["Split Studio macrostructure", "Midnight theme", "N9 nav", "Ft5 footer", "hairline divider language"]
+}

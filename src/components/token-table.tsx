@@ -71,11 +71,11 @@ export function TokenTable({ tokens }: { tokens: Token[] }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-md border border-border">
+    <div className="border-y border-rule">
       {/* Header — desktop only; the mobile layout labels inline instead. */}
       <div
         className={cn(
-          "hidden border-b border-border bg-card/60 px-4 py-2.5 sm:px-5",
+          "hidden border-b border-rule px-3 py-2.5 sm:px-4",
           GRID,
           "sm:grid",
         )}
@@ -88,10 +88,11 @@ export function TokenTable({ tokens }: { tokens: Token[] }) {
               type="button"
               onClick={() => toggleSort(col.key)}
               className={cn(
-                "flex items-center gap-1 text-left font-mono text-[10.5px] uppercase tracking-[0.11em] transition-colors",
+                "flex items-center gap-1 whitespace-nowrap text-left font-mono text-[length:var(--text-xs)] uppercase tracking-[var(--tracking-label)] transition-colors duration-[var(--dur-short)]",
+                "active:text-ink disabled:cursor-not-allowed disabled:opacity-55",
                 active
                   ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground",
+                  : "text-muted-foreground hover:text-ink",
               )}
             >
               {col.label}
@@ -109,11 +110,11 @@ export function TokenTable({ tokens }: { tokens: Token[] }) {
         <span />
       </div>
 
-      <ul className="divide-y divide-border">
+      <ul className="divide-y divide-rule">
         {sorted.map((token) => {
           const open = openId === token.id;
           return (
-            <li key={token.id} className={cn(open && "bg-card/25")}>
+            <li key={token.id} className={cn(open && "bg-paper-2")}>
               <button
                 type="button"
                 onClick={() => setOpenId(open ? null : token.id)}
@@ -121,30 +122,30 @@ export function TokenTable({ tokens }: { tokens: Token[] }) {
                 aria-controls={`ownership-${token.id}`}
                 className={cn(
                   "grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] gap-x-3",
-                  "px-4 py-3.5 text-left transition-colors hover:bg-card/50 sm:px-5 sm:py-3",
+                  "px-3 py-3.5 text-left transition-colors duration-[var(--dur-short)] ease-[var(--ease-out)] hover:bg-paper-2 active:bg-paper-3 disabled:cursor-not-allowed disabled:opacity-55 sm:px-4 sm:py-3",
                   GRID,
                 )}
               >
-                <span className="font-mono text-[13px] font-medium tracking-wide text-primary">
+                <span className="font-mono text-[length:var(--text-sm)] tracking-wide text-primary">
                   {token.ticker}
                 </span>
 
-                <span className="col-span-2 mt-1 truncate text-[13.5px] text-foreground/90 sm:col-span-1 sm:mt-0">
+                <span className="col-span-2 mt-1 truncate text-[length:var(--text-sm)] text-ink sm:col-span-1 sm:mt-0">
                   {token.company}
                 </span>
 
-                <span className="col-span-2 mt-0.5 truncate text-[13px] text-muted-foreground sm:col-span-1 sm:mt-0">
+                <span className="col-span-2 mt-0.5 truncate text-[length:var(--text-sm)] text-muted-foreground sm:col-span-1 sm:mt-0">
                   {token.issuer}
                 </span>
 
                 <span className="col-span-2 mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:mt-0 sm:contents">
-                  <span className="truncate font-mono text-[11px] uppercase tracking-[0.07em] text-muted-foreground">
+                  <span className="truncate font-mono text-[length:var(--text-xs)] uppercase tracking-[0.08em] text-muted-foreground">
                     {INSTRUMENT_LABELS[token.instrumentType]}
                   </span>
 
                   <span
                     className={cn(
-                      "font-mono text-[11.5px] uppercase tracking-[0.07em]",
+                      "font-mono text-[length:var(--text-xs)] uppercase tracking-[0.08em]",
                       isUnverified(token.retailRedeemable)
                         ? "text-muted-foreground italic"
                         : token.retailRedeemable
@@ -167,12 +168,9 @@ export function TokenTable({ tokens }: { tokens: Token[] }) {
 
                 <span
                   aria-hidden
-                  className={cn(
-                    "hidden text-[10px] text-muted-foreground transition-transform sm:block",
-                    open && "rotate-90",
-                  )}
+                  className="hidden font-mono text-[length:var(--text-sm)] text-muted-foreground sm:block"
                 >
-                  ▶
+                  {open ? "−" : "+"}
                 </span>
               </button>
 

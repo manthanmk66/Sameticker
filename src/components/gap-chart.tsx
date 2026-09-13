@@ -36,7 +36,7 @@ function usd(n: number): string {
 
 function Frame({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-[300px] items-center justify-center rounded-md border border-border bg-card/30 px-6 text-center sm:h-[340px]">
+    <div className="flex h-[300px] items-center justify-center border border-rule px-6 text-center sm:h-[340px]">
       {children}
     </div>
   );
@@ -126,13 +126,13 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
     <Select value={selected} onValueChange={(v) => v && setSelected(v)}>
       <SelectTrigger
         aria-label="Select a token to chart"
-        className="w-full font-mono text-[13px] sm:w-[280px]"
+        className="w-full font-mono text-[length:var(--text-sm)] sm:w-[300px]"
       >
         <SelectValue placeholder="Select a token" />
       </SelectTrigger>
       <SelectContent>
         {tokens.map((t) => (
-          <SelectItem key={t.id} value={t.ticker} className="font-mono text-[13px]">
+          <SelectItem key={t.id} value={t.ticker} className="font-mono text-[length:var(--text-sm)]">
             {t.ticker} · {t.issuer}
           </SelectItem>
         ))}
@@ -167,10 +167,10 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
     );
   } else {
     body = (
-      <div className="rounded-md border border-border bg-card/30 p-3 pt-4 sm:p-4">
+      <div className="border border-rule p-3 pt-4 sm:p-4">
         <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1.5 px-1 pb-3 font-mono text-[11px] uppercase tracking-[0.08em]">
-          <span className="flex items-center gap-1.5 text-chain">
-            <span aria-hidden className="h-px w-4 bg-chain" />
+          <span className="flex items-center gap-1.5 text-primary">
+            <span aria-hidden className="h-px w-4 bg-primary" />
             On-chain {data?.ticker}
           </span>
           {close != null && (
@@ -205,8 +205,8 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
                     day: "numeric",
                   })
                 }
-                stroke="var(--muted-foreground)"
-                tick={{ fontSize: 10, fontFamily: "var(--font-geist-mono)" }}
+                stroke="var(--color-muted)"
+                tick={{ fontSize: 10, fontFamily: "var(--font-mono)" }}
                 tickLine={false}
                 axisLine={{ stroke: "var(--border)" }}
               />
@@ -214,8 +214,8 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
                 domain={yDomain}
                 allowDataOverflow={false}
                 width={58}
-                stroke="var(--muted-foreground)"
-                tick={{ fontSize: 10, fontFamily: "var(--font-geist-mono)" }}
+                stroke="var(--color-muted)"
+                tick={{ fontSize: 10, fontFamily: "var(--font-mono)" }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v: number) =>
@@ -224,11 +224,11 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
               />
               <Tooltip
                 contentStyle={{
-                  background: "var(--popover)",
-                  border: "1px solid var(--border)",
-                  borderRadius: 4,
+                  background: "var(--color-paper-2)",
+                  border: "1px solid var(--color-rule)",
+                  borderRadius: 0,
                   fontSize: 12,
-                  fontFamily: "var(--font-geist-mono)",
+                  fontFamily: "var(--font-mono)",
                 }}
                 labelFormatter={(t) => new Date(Number(t)).toLocaleString()}
                 formatter={(value, name) =>
@@ -243,7 +243,7 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
                   dataKey="price"
                   baseValue={close}
                   stroke="none"
-                  fill="var(--primary)"
+                  fill="var(--color-accent)"
                   fillOpacity={0.16}
                   isAnimationActive={false}
                   activeDot={false}
@@ -253,13 +253,13 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
               {close != null && (
                 <ReferenceLine
                   y={close}
-                  stroke="var(--muted-foreground)"
+                  stroke="var(--color-muted)"
                   strokeDasharray="4 4"
                 />
               )}
               <Line
                 dataKey="price"
-                stroke="var(--chain)"
+                stroke="var(--color-accent)"
                 strokeWidth={1.75}
                 dot={false}
                 isAnimationActive={false}
@@ -275,10 +275,10 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
     <div>
       <div className="mb-4">{picker}</div>
       {body}
-      <p className="mt-4 max-w-3xl text-[13px] leading-relaxed text-muted-foreground">
+      <p className="mt-5 max-w-[62ch] text-[length:var(--text-sm)] leading-relaxed text-muted-foreground">
         {CAPTION}
       </p>
-      <p className="mt-3 font-mono text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">
+      <p className="mt-3 font-mono text-[length:var(--text-xs)] uppercase tracking-[var(--tracking-label)] text-muted-foreground">
         On-chain price via GeckoTerminal · previous close via Nasdaq
       </p>
     </div>
