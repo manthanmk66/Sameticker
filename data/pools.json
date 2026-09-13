@@ -1,0 +1,80 @@
+{
+  "generatedAt": "2026-09-13",
+  "pools": {
+    "SPCXxcqXj6e5dJDVNovHN8744zkbhM2bYudU45BimGb": {
+      "pool": "CsioJDbZethDNdy6M6HV5ECeowF8zm7BFvTBcb7FZeCt",
+      "name": "SPCX / USDC",
+      "liquidityUsd": 778458
+    },
+    "MSTRdWXMeZxdE8osAQy3fA4rvTY5rgummDSMEx6U7Nz": {
+      "pool": "3Hro9bWkxiyV7ZfH2ZBdqyuNEVZt69ixNyQbAmcvyvys",
+      "name": "MSTR / USDC",
+      "liquidityUsd": 279124
+    },
+    "iNTCy1qTsUEZQe3DSocLz1ZXXai34Gdw8THQh5rxFaF": {
+      "pool": "7EopBX8uYo2yUn5sk1dakNcWf2onP1JAPHBkrpQaSYMo",
+      "name": "INTC / USDC",
+      "liquidityUsd": 211936
+    },
+    "TTWofwAge91oFhZs7kpQdyrVRkmevgM88xijGvQFbKo": {
+      "pool": "6PTm7MkUmtsLU7w6dWrMHJAt8PnzoCgcZdKyTKEhUAPL",
+      "name": "TTWO / USDC",
+      "liquidityUsd": 116259
+    },
+    "MUxEsUKSMACyw5fZf68wxf5FLnZVhtU9CwH8uNNGay1": {
+      "pool": "13MEx6gjRadJNUdmToaGSzgeWHLH7FzScUQS9Mc5nYF5",
+      "name": "MU / USDC",
+      "liquidityUsd": 4067395
+    },
+    "SNDKbwMUQvZhnLnxLduradgLHG5KrPuKwpnrkkGRhfH": {
+      "pool": "HsE6AfxKJQgWMdK1Z23u1xgZhstxXjMVnm5gVaGJ2J7",
+      "name": "SNDK / USDC",
+      "liquidityUsd": 153496
+    },
+    "SKHYhSjuRWHgikq8eRKbtBbpABgJSkd7ytQV14i9EQ3": {
+      "pool": "DPAU7wDyMXDgNAfzQYMfyNqmTjzcoRsSPA2LeGH71hgi",
+      "name": "SKHY / USDC",
+      "liquidityUsd": 2461009
+    },
+    "DRAMjSWR7HRfJKjRkvQWYL2bcaejaVhuxEcjf4pAY4Cw": {
+      "pool": "ECkcSDJvKiyoVU5f1L6CgpSmMVd1S4KGRkXW56f1bEWN",
+      "name": "DRAM / USDC",
+      "liquidityUsd": 363634
+    },
+    "Xs3oZwbHvqis4NYcf4YKWmEia2eC84wSiVrcYcTqpH8": {
+      "pool": "AHNN6JmvaGG6XUoSg7sEr38gRYDB2jTbUvqXVuqaRHpq",
+      "name": "SPCXx / USDC",
+      "liquidityUsd": 999474
+    },
+    "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB": {
+      "pool": "8aDaBQkTrS6HVMjyc6EZebgdiaXhLYGriDWKWWp1NpFF",
+      "name": "TSLAx / USDC",
+      "liquidityUsd": 2119250
+    },
+    "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh": {
+      "pool": "49iMatQtoyabsYAQc8GafVq6aeBFVDxSRH44oiatyyw6",
+      "name": "NVDAx / USDC",
+      "liquidityUsd": 2164215
+    },
+    "XsP7xzNPvEHS1m6qfanPUGjNmdnmsLKEoNAnHjdxxyZ": {
+      "pool": "2ngTuP7xA581dqX9uJkGRqxmKuehY3k4SDfPebeoRG2J",
+      "name": "MSTRx / SOL",
+      "liquidityUsd": 712841
+    },
+    "wzAyQTorWyoVXuJKj2x8EqKEGJpS13z6EWE9z5Aondo": {
+      "pool": "2ELQ7uNDSLyM64xdefeYdox8ip96VN2Yh1pasrkGBxbB",
+      "name": "SPCXon / USDT",
+      "liquidityUsd": 0
+    },
+    "PreANxuXjsy2pvisWWMNB6YaJNzr7681wJJr2rHsfTh": {
+      "pool": "22PthLk8TYnurtbWKRyECFd99cHHbfsbPNHfeMetzfZg",
+      "name": "SPACEX / USDC",
+      "liquidityUsd": 290482
+    },
+    "Pren1FvFX6J3E4kXhJuCiAD5aDmGEb7qJRncwA8Lkhw": {
+      "pool": "EZyszDEx1LZDt7TsSFV8xdPi49sDKC3mdfv2MVMEQLtU",
+      "name": "ANTHRP / SOL",
+      "liquidityUsd": 234566
+    }
+  }
+}

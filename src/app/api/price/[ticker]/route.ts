@@ -1,7 +1,29 @@
 import { NextResponse } from "next/server";
+import poolCache from "../../../../../data/pools.json";
 import { getTokenByTicker, isUnverified, NEEDS_INPUT } from "@/lib/tokens";
 
 export const revalidate = 3600;
+
+/** Pools rarely change; no need to re-resolve one every hour. */
+const POOL_REVALIDATE = 86_400;
+
+const HOURS = 168; // 7 days
+
+/**
+ * Both upstreams are public and keyless by design — the site should build and
+ * run with no secrets at all. Neither is contractually guaranteed, so every
+ * call degrades to a note rather than an error.
+ */
+const GECKOTERMINAL = "https://api.geckoterminal.com/api/v2";
+const NASDAQ = "https://api.nasdaq.com/api/quote";
+
+/** api.nasdaq.com returns 403 to clients that do not look like a browser. */
+const BROWSER_UA =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
+  "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
+
+/** Quote tokens whose pools price the asset in something meaningful. */
+const STABLE_QUOTES = new Set(["USDC", "USDT", "USD", "SOL", "WSOL"]);
 
 export type PricePoint = { t: number; price: number };
 
@@ -16,74 +38,153 @@ export type PriceResponse = {
   notes: string[];
 };
 
-const DAYS = 7;
+type Pool = {
+  attributes?: { address?: string; name?: string; reserve_in_usd?: string };
+};
 
-/** Birdeye OHLCV history for one mint. Returns [] on any failure. */
-async function fetchChainHistory(mint: string, notes: string[]): Promise<PricePoint[]> {
-  const key = process.env.BIRDEYE_API_KEY;
-  if (!key) {
-    notes.push("BIRDEYE_API_KEY is not set.");
-    return [];
+/**
+ * Picks the pool to chart. Highest liquidity alone is not good enough: the
+ * deepest pool for a long-tail token is sometimes quoted in another memecoin,
+ * so prefer pools quoted in a stablecoin or SOL.
+ */
+function pickPool(pools: Pool[]): string | null {
+  const named = pools.filter((p) => p.attributes?.address);
+  if (named.length === 0) return null;
+
+  const quoteOf = (p: Pool) =>
+    (p.attributes?.name ?? "").split("/").pop()?.trim().toUpperCase() ?? "";
+  const liquidityOf = (p: Pool) =>
+    Number.parseFloat(p.attributes?.reserve_in_usd ?? "0") || 0;
+
+  const preferred = named.filter((p) => STABLE_QUOTES.has(quoteOf(p)));
+  const candidates = preferred.length > 0 ? preferred : named;
+
+  return candidates.reduce((best, p) =>
+    liquidityOf(p) > liquidityOf(best) ? p : best,
+  ).attributes!.address!;
+}
+
+function rateLimited(status: number, notes: string[], who: string): boolean {
+  if (status !== 429) return false;
+  notes.push(`${who} rate limit reached. Try again shortly.`);
+  return true;
+}
+
+/**
+ * GeckoTerminal's keyless tier is burst-sensitive but recovers in about a
+ * second, so one short retry absorbs the case where a visitor flicks through
+ * several tokens before the hourly cache is warm. Bounded to a single attempt
+ * to keep worst-case response time predictable.
+ */
+async function fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
+  const res = await fetch(url, init);
+  if (res.status !== 429) return res;
+  await new Promise((resolve) => setTimeout(resolve, 1800));
+  return fetch(url, init);
+}
+
+const KNOWN_POOLS = (poolCache as { pools: Record<string, { pool: string }> }).pools;
+
+/**
+ * Resolves a pool live. Only needed when data/pools.json has no entry, which
+ * keeps us well inside GeckoTerminal's keyless rate limit in the common case.
+ */
+async function resolvePool(mint: string, notes: string[]): Promise<string | null> {
+  try {
+    const res = await fetchWithRetry(
+      `${GECKOTERMINAL}/networks/solana/tokens/${mint}/pools`,
+      {
+        headers: { accept: "application/json" },
+        next: { revalidate: POOL_REVALIDATE },
+      },
+    );
+    if (!res.ok) {
+      if (!rateLimited(res.status, notes, "GeckoTerminal")) {
+        notes.push(`GeckoTerminal returned ${res.status} looking up pools.`);
+      }
+      return null;
+    }
+    const json = (await res.json()) as { data?: Pool[] };
+    const pool = pickPool(json?.data ?? []);
+    if (!pool) notes.push("No on-chain liquidity pool found for this mint.");
+    return pool;
+  } catch {
+    notes.push("Could not reach GeckoTerminal.");
+    return null;
   }
+}
 
-  const timeTo = Math.floor(Date.now() / 1000);
-  const timeFrom = timeTo - DAYS * 24 * 60 * 60;
-  const url =
-    `https://public-api.birdeye.so/defi/history_price?address=${mint}` +
-    `&address_type=token&type=1H&time_from=${timeFrom}&time_to=${timeTo}`;
+/** GeckoTerminal hourly OHLCV for the deepest sensible pool. Returns [] on failure. */
+async function fetchChainHistory(mint: string, notes: string[]): Promise<PricePoint[]> {
+  const poolAddress =
+    KNOWN_POOLS[mint]?.pool ?? (await resolvePool(mint, notes));
+  if (!poolAddress) return [];
 
   try {
-    const res = await fetch(url, {
-      headers: { "X-API-KEY": key, "x-chain": "solana", accept: "application/json" },
-      next: { revalidate },
-    });
+    const res = await fetchWithRetry(
+      `${GECKOTERMINAL}/networks/solana/pools/${poolAddress}/ohlcv/hour` +
+        `?aggregate=1&limit=${HOURS}&currency=usd`,
+      { headers: { accept: "application/json" }, next: { revalidate } },
+    );
     if (!res.ok) {
-      notes.push(`Birdeye returned ${res.status}.`);
+      if (!rateLimited(res.status, notes, "GeckoTerminal")) {
+        notes.push(`GeckoTerminal returned ${res.status} fetching price history.`);
+      }
       return [];
     }
     const json = (await res.json()) as {
-      success?: boolean;
-      data?: { items?: { unixTime: number; value: number }[] };
+      data?: { attributes?: { ohlcv_list?: number[][] } };
     };
-    const items = json?.data?.items;
-    if (!Array.isArray(items) || items.length === 0) {
-      notes.push("Birdeye returned no price points for this mint.");
+    const list = json?.data?.attributes?.ohlcv_list;
+    if (!Array.isArray(list) || list.length === 0) {
+      notes.push("No price history available for this pool.");
       return [];
     }
-    return items
-      .filter((i) => typeof i?.value === "number" && Number.isFinite(i.value))
-      .map((i) => ({ t: i.unixTime * 1000, price: i.value }))
+
+    // Rows are [timestamp, open, high, low, close, volume], newest first.
+    return list
+      .filter((r) => Array.isArray(r) && Number.isFinite(r[4]) && r[4] > 0)
+      .map((r) => ({ t: r[0] * 1000, price: r[4] }))
       .sort((a, b) => a.t - b.t);
   } catch {
-    notes.push("Could not reach Birdeye.");
+    notes.push("Could not reach GeckoTerminal.");
     return [];
   }
 }
 
-/** Finnhub previous close for the underlying listing. Returns null on failure. */
+/** Nasdaq's public quote summary. Returns null on failure. */
 async function fetchPreviousClose(symbol: string, notes: string[]): Promise<number | null> {
-  const key = process.env.FINNHUB_API_KEY;
-  if (!key) {
-    notes.push("FINNHUB_API_KEY is not set.");
-    return null;
-  }
   try {
     const res = await fetch(
-      `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${key}`,
-      { next: { revalidate } },
+      `${NASDAQ}/${encodeURIComponent(symbol)}/summary?assetclass=stocks`,
+      {
+        headers: { "User-Agent": BROWSER_UA, accept: "application/json" },
+        next: { revalidate },
+      },
     );
     if (!res.ok) {
-      notes.push(`Finnhub returned ${res.status}.`);
+      if (!rateLimited(res.status, notes, "Nasdaq")) {
+        notes.push(`Nasdaq returned ${res.status} for ${symbol}.`);
+      }
       return null;
     }
-    const json = (await res.json()) as { pc?: number };
-    if (typeof json?.pc !== "number" || json.pc <= 0) {
-      notes.push(`Finnhub has no previous close for ${symbol}.`);
+    const json = (await res.json()) as {
+      data?: { summaryData?: { PreviousClose?: { value?: string } } };
+    };
+    const raw = json?.data?.summaryData?.PreviousClose?.value;
+    if (typeof raw !== "string") {
+      notes.push(`Nasdaq has no previous close for ${symbol}.`);
       return null;
     }
-    return json.pc;
+    // Values arrive formatted, e.g. "$1,692.59".
+    const parsed = Number.parseFloat(raw.replace(/[$,]/g, ""));
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      notes.push(`Nasdaq has no previous close for ${symbol}.`);
+      return null;
+    }
+    return parsed;
   } catch {
-    notes.push("Could not reach Finnhub.");
+    notes.push("Could not reach Nasdaq.");
     return null;
   }
 }

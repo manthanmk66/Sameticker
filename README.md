@@ -102,30 +102,41 @@ fails `next build`. Run it directly with `npm run validate`.
 
 ```bash
 npm install
-cp .env.example .env.local   # optional — only the chart needs keys
 npm run dev
 ```
 
-The site renders completely without API keys. Sections 1 and 2 are static and
-read only from `data/tokens.json`. Section 3 shows "Price data unavailable"
-when keys are absent or either upstream is down; a failed fetch never breaks
-the page.
+**No API keys, no `.env`, no signup.** Both price sources are public and
+keyless:
+
+| Data | Source | Notes |
+| --- | --- | --- |
+| On-chain hourly price | [GeckoTerminal](https://api.geckoterminal.com) | Keyless. Burst-sensitive rate limit; see below. |
+| Traditional-market previous close | [Nasdaq](https://api.nasdaq.com) | Keyless. Requires a browser `User-Agent`. |
+
+Sections 1 and 2 are static and read only from `data/tokens.json`. Section 3
+shows "Price data unavailable" with the specific reason when an upstream is
+down or rate-limited; a failed fetch never breaks the page.
+
+### Rate limiting
+
+GeckoTerminal's keyless tier is burst-sensitive but recovers in about a second.
+Three things keep the chart inside it:
+
+- Responses are cached for an hour (`revalidate = 3600`).
+- `data/pools.json` pre-resolves each mint's pool, halving calls per chart load.
+- A single 1.8s retry on HTTP 429 absorbs cold-cache bursts.
+
+A visitor flicking through every token at once may still see a rate-limit
+message on the last few; it resolves on the next view and is cached from then
+on.
 
 | Command | |
 | --- | --- |
 | `npm run dev` | Local dev server |
 | `npm run build` | Production build, fails on schema violation |
 | `npm run validate` | Validate `data/tokens.json` on its own |
+| `npm run resolve-pools` | Regenerate `data/pools.json` |
 | `npm run lint` | ESLint |
-
-### Environment
-
-| Variable | Used for | Required |
-| --- | --- | --- |
-| `BIRDEYE_API_KEY` | On-chain price history (`/defi/history_price`) | No |
-| `FINNHUB_API_KEY` | Traditional-market previous close (`/quote`) | No |
-
-Set both in Vercel project settings to enable the chart in production.
 
 ---
 
@@ -136,15 +147,25 @@ auth.
 
 ```
 data/tokens.json                     the product — static, human-curated
-src/lib/tokens.ts                    Zod schema + build-time validation
+data/pools.json                      operational cache, regenerable, not curated data
+src/lib/token-schema.ts              Zod schema, shared by build and validator
+src/lib/tokens.ts                    loads + validates tokens.json
 src/lib/site.ts                      repo URL, hero pair
 src/app/page.tsx                     three sections, top to bottom
-src/app/api/price/[ticker]/route.ts  Birdeye + Finnhub, cached 1h, never throws
+src/app/api/price/[ticker]/route.ts  GeckoTerminal + Nasdaq, cached 1h, never throws
 src/components/                      hero, table, ownership card, chart, footer
 ```
+
+`data/pools.json` is deliberately separate from `data/tokens.json`. It is a
+performance cache that can be regenerated at any time; mixing it into the
+curated file would dilute the claim that every value there was read from a
+source document. A stale or missing entry costs one extra API call, never
+correctness — the route falls back to resolving the pool live.
 
 Recharts is loaded on demand so it stays out of the initial bundle.
 
 ## Stack
 
 Next.js 15 (App Router) · TypeScript · Tailwind · shadcn/ui · Recharts · Vercel.
+
+No database, no wallet connect, no cron jobs, no auth, and no API keys.

@@ -24,14 +24,7 @@ import type { Token } from "@/lib/tokens";
 const CAPTION =
   "Traditional markets are closed nights and weekends. Tokenized stocks trade around the clock. During those hours the on-chain price is set by on-chain liquidity alone. This is context, not a trade signal: on most issuers only qualified, KYC-verified investors can mint or redeem, so retail cannot close this gap.";
 
-type Row = {
-  t: number;
-  price: number;
-  /** Lower edge of the shaded band. */
-  base: number;
-  /** Height of the band, stacked on `base`, so the two form the gap region. */
-  band: number;
-};
+type Row = { t: number; price: number };
 
 function usd(n: number): string {
   return n.toLocaleString("en-US", {
@@ -80,20 +73,20 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
     };
   }, [selected]);
 
-  const { rows, maxGap, close } = useMemo(() => {
+  const { rows, maxGap, close, yDomain, dayTicks } = useMemo(() => {
     const chain = data?.chain ?? [];
     const pc = data?.previousClose ?? null;
-    if (chain.length === 0) return { rows: [] as Row[], maxGap: null, close: pc };
-
-    const rows: Row[] = chain.map((p) => {
-      const ref = pc ?? p.price;
+    if (chain.length === 0) {
       return {
-        t: p.t,
-        price: p.price,
-        base: Math.min(p.price, ref),
-        band: Math.abs(p.price - ref),
+        rows: [] as Row[],
+        maxGap: null,
+        close: pc,
+        yDomain: [0, 1] as [number, number],
+        dayTicks: [] as number[],
       };
-    });
+    }
+
+    const rows: Row[] = chain.map((p) => ({ t: p.t, price: p.price }));
 
     let maxGap: { pct: number; abs: number; t: number } | null = null;
     if (pc) {
@@ -104,7 +97,29 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
         }
       }
     }
-    return { rows, maxGap, close: pc };
+    // The axis is zoomed to the data: anchoring it at zero would flatten a
+    // few percent of divergence into a flat line.
+    const values = chain.map((p) => p.price);
+    if (pc) values.push(pc);
+    const lo = Math.min(...values);
+    const hi = Math.max(...values);
+    const pad = (hi - lo || hi * 0.01) * 0.18;
+    const yDomain: [number, number] = [lo - pad, hi + pad];
+
+    // One tick per calendar day: the point of this chart is which side of a
+    // market close you are on, so day boundaries are the meaningful gridlines.
+    const dayTicks: number[] = [];
+    const cursor = new Date(chain[0].t);
+    cursor.setHours(0, 0, 0, 0);
+    for (
+      let d = cursor.getTime();
+      d <= chain[chain.length - 1].t;
+      d += 24 * 60 * 60 * 1000
+    ) {
+      if (d >= chain[0].t) dayTicks.push(d);
+    }
+
+    return { rows, maxGap, close: pc, yDomain, dayTicks };
   }, [data]);
 
   const picker = (
@@ -183,6 +198,7 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
                 type="number"
                 scale="time"
                 domain={["dataMin", "dataMax"]}
+                ticks={dayTicks}
                 tickFormatter={(t: number) =>
                   new Date(t).toLocaleDateString("en-US", {
                     month: "short",
@@ -193,16 +209,18 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
                 tick={{ fontSize: 10, fontFamily: "var(--font-geist-mono)" }}
                 tickLine={false}
                 axisLine={{ stroke: "var(--border)" }}
-                minTickGap={40}
               />
               <YAxis
-                domain={["auto", "auto"]}
+                domain={yDomain}
+                allowDataOverflow={false}
                 width={58}
                 stroke="var(--muted-foreground)"
                 tick={{ fontSize: 10, fontFamily: "var(--font-geist-mono)" }}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(v: number) => `$${v.toFixed(0)}`}
+                tickFormatter={(v: number) =>
+                  `$${v.toLocaleString("en-US", { maximumFractionDigits: v < 100 ? 1 : 0 })}`
+                }
               />
               <Tooltip
                 contentStyle={{
@@ -217,24 +235,21 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
                   name === "price" ? [usd(Number(value)), "On-chain"] : null
                 }
               />
-              {/* base + band stack to shade the region between the two lines. */}
-              <Area
-                dataKey="base"
-                stackId="gap"
-                stroke="none"
-                fill="transparent"
-                isAnimationActive={false}
-                activeDot={false}
-              />
-              <Area
-                dataKey="band"
-                stackId="gap"
-                stroke="none"
-                fill="var(--primary)"
-                fillOpacity={0.16}
-                isAnimationActive={false}
-                activeDot={false}
-              />
+              {/* Shades the region between the on-chain line and the close.
+                  baseValue anchors the fill to the reference price, so the
+                  band reads on both sides when the price crosses it. */}
+              {close != null && (
+                <Area
+                  dataKey="price"
+                  baseValue={close}
+                  stroke="none"
+                  fill="var(--primary)"
+                  fillOpacity={0.16}
+                  isAnimationActive={false}
+                  activeDot={false}
+                  legendType="none"
+                />
+              )}
               {close != null && (
                 <ReferenceLine
                   y={close}
@@ -262,6 +277,9 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
       {body}
       <p className="mt-4 max-w-3xl text-[13px] leading-relaxed text-muted-foreground">
         {CAPTION}
+      </p>
+      <p className="mt-3 font-mono text-[10.5px] uppercase tracking-[0.1em] text-muted-foreground">
+        On-chain price via GeckoTerminal · previous close via Nasdaq
       </p>
     </div>
   );
