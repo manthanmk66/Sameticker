@@ -89,6 +89,7 @@ export function OwnershipCard({ token }: { token: Token }) {
       </p>
 
       <dl className="mt-4 grid gap-x-8 sm:grid-cols-2">
+        <Field label="CUSIP" value={token.cusip} mono />
         <Field label="Issuer" value={token.issuer} />
         <Field label="Liquidity router" value={token.liquidityRouter} />
         <Field

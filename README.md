@@ -111,7 +111,8 @@ keyless:
 | Data | Source | Notes |
 | --- | --- | --- |
 | On-chain hourly price | [GeckoTerminal](https://api.geckoterminal.com) | Keyless. Burst-sensitive rate limit; see below. |
-| Traditional-market previous close | [Nasdaq](https://api.nasdaq.com) | Keyless. Requires a browser `User-Agent`. |
+| Traditional-market close | [Backpack Securities](https://docs.backpack.exchange/) | Keyless. `klines?source=External` — the external-market series, not Backpack's own tape. |
+| US session calendar + holidays | [Backpack Securities](https://docs.backpack.exchange/) | Keyless. Real session hours, so the chart shades when the reference price was actually live. |
 
 Sections 1 and 2 are static and read only from `data/tokens.json`. Section 3
 shows "Price data unavailable" with the specific reason when an upstream is
@@ -136,6 +137,7 @@ on.
 | `npm run build` | Production build, fails on schema violation |
 | `npm run validate` | Validate `data/tokens.json` on its own |
 | `npm run resolve-pools` | Regenerate `data/pools.json` |
+| `npm run fetch-cusips` | Refresh CUSIPs from Backpack's securities endpoint |
 | `npm run lint` | ESLint |
 
 ---
@@ -152,7 +154,8 @@ src/lib/token-schema.ts              Zod schema, shared by build and validator
 src/lib/tokens.ts                    loads + validates tokens.json
 src/lib/site.ts                      repo URL, hero pair
 src/app/page.tsx                     three sections, top to bottom
-src/app/api/price/[ticker]/route.ts  GeckoTerminal + Nasdaq, cached 1h, never throws
+src/app/api/price/[ticker]/route.ts  GeckoTerminal + Backpack, cached 1h, never throws
+src/lib/market-sessions.ts           real US session windows (DST + holidays)
 src/components/                      hero, table, ownership card, chart, footer
 ```
 

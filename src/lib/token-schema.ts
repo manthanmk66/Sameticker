@@ -27,6 +27,8 @@ const tokenSchema = z
     id: z.string().regex(/^[a-z0-9-]+$/, "id must be kebab-case"),
     ticker: filled,
     company: filled,
+    /** CUSIP of the underlying registered security, where the issuer publishes one. */
+    cusip: filled,
     referenceSymbol: filled,
     issuer: filled,
     liquidityRouter: filled,
