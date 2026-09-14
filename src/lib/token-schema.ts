@@ -30,6 +30,12 @@ const tokenSchema = z
     /** CUSIP of the underlying registered security, where the issuer publishes one. */
     cusip: filled,
     referenceSymbol: filled,
+    /**
+     * Underlying shares represented by one token. Only set where the issuer
+     * states it. Without it a price comparison is meaningless — a token worth
+     * five post-split shares is not "up 300%" against a one-share reference.
+     */
+    sharesPerToken: z.union([z.number().positive(), z.literal("UNVERIFIED")]),
     issuer: filled,
     liquidityRouter: filled,
     mintAddress: filled,

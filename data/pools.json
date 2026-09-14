@@ -1,80 +1,95 @@
 {
-  "generatedAt": "2026-09-13",
+  "generatedAt": "2026-09-14",
   "pools": {
     "SPCXxcqXj6e5dJDVNovHN8744zkbhM2bYudU45BimGb": {
-      "pool": "CsioJDbZethDNdy6M6HV5ECeowF8zm7BFvTBcb7FZeCt",
+      "pool": "7nVQtYQipN564E9oBi6yZFGox4WL6CR4zsLyYipqgTWu",
       "name": "SPCX / USDC",
-      "liquidityUsd": 778458
+      "liquidityUsd": 650658,
+      "volumeUsd24h": 989802
     },
     "MSTRdWXMeZxdE8osAQy3fA4rvTY5rgummDSMEx6U7Nz": {
-      "pool": "3Hro9bWkxiyV7ZfH2ZBdqyuNEVZt69ixNyQbAmcvyvys",
+      "pool": "9bW3REkYSeZChF4hdjknhzRAonAdPeX6Y45buU6mi9WJ",
       "name": "MSTR / USDC",
-      "liquidityUsd": 279124
+      "liquidityUsd": 120118,
+      "volumeUsd24h": 63388
     },
     "iNTCy1qTsUEZQe3DSocLz1ZXXai34Gdw8THQh5rxFaF": {
-      "pool": "7EopBX8uYo2yUn5sk1dakNcWf2onP1JAPHBkrpQaSYMo",
+      "pool": "HHNPd8DpneXbaYBiGC7SU28mYxocbkMznPABPN3sGTyU",
       "name": "INTC / USDC",
-      "liquidityUsd": 211936
+      "liquidityUsd": 114812,
+      "volumeUsd24h": 23315
     },
     "TTWofwAge91oFhZs7kpQdyrVRkmevgM88xijGvQFbKo": {
       "pool": "6PTm7MkUmtsLU7w6dWrMHJAt8PnzoCgcZdKyTKEhUAPL",
       "name": "TTWO / USDC",
-      "liquidityUsd": 116259
+      "liquidityUsd": 121169,
+      "volumeUsd24h": 140570
     },
     "MUxEsUKSMACyw5fZf68wxf5FLnZVhtU9CwH8uNNGay1": {
-      "pool": "13MEx6gjRadJNUdmToaGSzgeWHLH7FzScUQS9Mc5nYF5",
+      "pool": "9XVKRT2D53LEDyA5jyhBLMEv23kw91iNrXBzvghUDfT9",
       "name": "MU / USDC",
-      "liquidityUsd": 4067395
+      "liquidityUsd": 298252,
+      "volumeUsd24h": 1808196
     },
     "SNDKbwMUQvZhnLnxLduradgLHG5KrPuKwpnrkkGRhfH": {
-      "pool": "HsE6AfxKJQgWMdK1Z23u1xgZhstxXjMVnm5gVaGJ2J7",
+      "pool": "3xgq5NN4yCmxJwZh4C4574a45YdAwbQ2N91Wk6TdUK7e",
       "name": "SNDK / USDC",
-      "liquidityUsd": 153496
+      "liquidityUsd": 111354,
+      "volumeUsd24h": 422156
     },
     "SKHYhSjuRWHgikq8eRKbtBbpABgJSkd7ytQV14i9EQ3": {
       "pool": "DPAU7wDyMXDgNAfzQYMfyNqmTjzcoRsSPA2LeGH71hgi",
       "name": "SKHY / USDC",
-      "liquidityUsd": 2461009
+      "liquidityUsd": 2434383,
+      "volumeUsd24h": 1404766
     },
     "DRAMjSWR7HRfJKjRkvQWYL2bcaejaVhuxEcjf4pAY4Cw": {
       "pool": "ECkcSDJvKiyoVU5f1L6CgpSmMVd1S4KGRkXW56f1bEWN",
       "name": "DRAM / USDC",
-      "liquidityUsd": 363634
+      "liquidityUsd": 354590,
+      "volumeUsd24h": 67409
     },
     "Xs3oZwbHvqis4NYcf4YKWmEia2eC84wSiVrcYcTqpH8": {
       "pool": "AHNN6JmvaGG6XUoSg7sEr38gRYDB2jTbUvqXVuqaRHpq",
       "name": "SPCXx / USDC",
-      "liquidityUsd": 999474
+      "liquidityUsd": 906966,
+      "volumeUsd24h": 348719
     },
     "XsDoVfqeBukxuZHWhdvWHBhgEHjGNst4MLodqsJHzoB": {
       "pool": "8aDaBQkTrS6HVMjyc6EZebgdiaXhLYGriDWKWWp1NpFF",
       "name": "TSLAx / USDC",
-      "liquidityUsd": 2119250
+      "liquidityUsd": 2106824,
+      "volumeUsd24h": 1314143
     },
     "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh": {
-      "pool": "49iMatQtoyabsYAQc8GafVq6aeBFVDxSRH44oiatyyw6",
-      "name": "NVDAx / USDC",
-      "liquidityUsd": 2164215
+      "pool": "38rXq2BuwdNcfnwydw6S2srpNK9N4gVzf39f69suPMsF",
+      "name": "NVDAx / SOL",
+      "liquidityUsd": 57904,
+      "volumeUsd24h": 1340358
     },
     "XsP7xzNPvEHS1m6qfanPUGjNmdnmsLKEoNAnHjdxxyZ": {
       "pool": "2ngTuP7xA581dqX9uJkGRqxmKuehY3k4SDfPebeoRG2J",
       "name": "MSTRx / SOL",
-      "liquidityUsd": 712841
+      "liquidityUsd": 706937,
+      "volumeUsd24h": 306170
     },
     "wzAyQTorWyoVXuJKj2x8EqKEGJpS13z6EWE9z5Aondo": {
       "pool": "2ELQ7uNDSLyM64xdefeYdox8ip96VN2Yh1pasrkGBxbB",
       "name": "SPCXon / USDT",
-      "liquidityUsd": 0
+      "liquidityUsd": 0,
+      "volumeUsd24h": 0
     },
     "PreANxuXjsy2pvisWWMNB6YaJNzr7681wJJr2rHsfTh": {
-      "pool": "22PthLk8TYnurtbWKRyECFd99cHHbfsbPNHfeMetzfZg",
+      "pool": "Chroid93DKzmgDYmCJELZ6CNC3SZ8WfRXzCkcqVtRy1r",
       "name": "SPACEX / USDC",
-      "liquidityUsd": 290482
+      "liquidityUsd": 10940,
+      "volumeUsd24h": 476
     },
     "Pren1FvFX6J3E4kXhJuCiAD5aDmGEb7qJRncwA8Lkhw": {
       "pool": "EZyszDEx1LZDt7TsSFV8xdPi49sDKC3mdfv2MVMEQLtU",
       "name": "ANTHRP / SOL",
-      "liquidityUsd": 234566
+      "liquidityUsd": 262542,
+      "volumeUsd24h": 2231349
     }
   }
 }
