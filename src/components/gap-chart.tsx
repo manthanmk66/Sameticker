@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Area,
   ComposedChart,
+  ReferenceArea,
   Line,
   ReferenceLine,
   ResponsiveContainer,
@@ -182,6 +183,12 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
               {data?.referenceSymbol} close {usd(close)}
             </span>
           )}
+          {(data?.openWindows?.length ?? 0) > 0 && (
+            <span className="flex items-center gap-1.5 text-muted-foreground">
+              <span aria-hidden className="h-2.5 w-4 bg-paper-3" />
+              US market open
+            </span>
+          )}
           {maxGap && (
             <span className={maxGap.abs >= 0 ? "text-risk-low" : "text-risk-high"}>
               Max divergence {maxGap.pct >= 0 ? "+" : ""}
@@ -235,6 +242,21 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
                   name === "price" ? [usd(Number(value)), "On-chain"] : null
                 }
               />
+              {/* Real regular-session windows from the issuer's own calendar —
+                  holidays and DST included. Everything unshaded is time when
+                  the reference price was not being set by anyone. */}
+              {(data?.openWindows ?? []).map((w) => (
+                <ReferenceArea
+                  key={w.from}
+                  x1={w.from}
+                  x2={w.to}
+                  fill="var(--color-paper-3)"
+                  fillOpacity={1}
+                  stroke="none"
+                  ifOverflow="hidden"
+                />
+              ))}
+
               {/* Shades the region between the on-chain line and the close.
                   baseValue anchors the fill to the reference price, so the
                   band reads on both sides when the price crosses it. */}
@@ -279,7 +301,7 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
         {CAPTION}
       </p>
       <p className="mt-3 font-mono text-[length:var(--text-xs)] uppercase tracking-[var(--tracking-label)] text-muted-foreground">
-        On-chain price via GeckoTerminal · previous close via Nasdaq
+        On-chain via GeckoTerminal · close and session calendar via Backpack Securities
       </p>
     </div>
   );

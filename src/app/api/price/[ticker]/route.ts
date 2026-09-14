@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import poolCache from "../../../../../data/pools.json";
+import { fetchOpenWindows, type Window } from "@/lib/market-sessions";
 import { getTokenByTicker, isUnverified, NEEDS_INPUT } from "@/lib/tokens";
 
 export const revalidate = 3600;
@@ -15,12 +16,7 @@ const HOURS = 168; // 7 days
  * call degrades to a note rather than an error.
  */
 const GECKOTERMINAL = "https://api.geckoterminal.com/api/v2";
-const NASDAQ = "https://api.nasdaq.com/api/quote";
-
-/** api.nasdaq.com returns 403 to clients that do not look like a browser. */
-const BROWSER_UA =
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 " +
-  "(KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36";
+const BACKPACK = "https://api.backpack.exchange/api/v1";
 
 /** Quote tokens whose pools price the asset in something meaningful. */
 const STABLE_QUOTES = new Set(["USDC", "USDT", "USD", "SOL", "WSOL"]);
@@ -34,6 +30,9 @@ export type PriceResponse = {
   /** Last traditional-market close, or null when unavailable. */
   previousClose: number | null;
   referenceSymbol: string | null;
+  /** Regular-session windows inside the chart range — when the reference
+   *  price was actually live. Empty when the calendar is unavailable. */
+  openWindows: Window[];
   /** Human-readable reasons a series is missing. Never throws. */
   notes: string[];
 };
@@ -152,39 +151,70 @@ async function fetchChainHistory(mint: string, notes: string[]): Promise<PricePo
   }
 }
 
-/** Nasdaq's public quote summary. Returns null on failure. */
-async function fetchPreviousClose(symbol: string, notes: string[]): Promise<number | null> {
+/**
+ * The last traditional-market close, from Backpack Securities' public klines
+ * with `source=External` — the external-market series, not Backpack's own tape.
+ *
+ * Taken as the last print at or before the most recent *completed* regular
+ * session, so the reference line is genuinely "the last close" rather than
+ * whatever the feed happened to carry overnight.
+ *
+ * Returns null on failure.
+ */
+async function fetchPreviousClose(
+  symbol: string,
+  openWindows: Window[],
+  notes: string[],
+): Promise<number | null> {
+  const startTime = Math.floor(Date.now() / 1000) - (HOURS + 48) * 60 * 60;
+  const url =
+    `${BACKPACK}/klines?symbol=${encodeURIComponent(`${symbol}.US_USDC`)}` +
+    `&interval=1h&startTime=${startTime}&source=External`;
+
   try {
-    const res = await fetch(
-      `${NASDAQ}/${encodeURIComponent(symbol)}/summary?assetclass=stocks`,
-      {
-        headers: { "User-Agent": BROWSER_UA, accept: "application/json" },
-        next: { revalidate },
-      },
-    );
+    const res = await fetch(url, {
+      headers: { accept: "application/json" },
+      next: { revalidate },
+    });
     if (!res.ok) {
-      if (!rateLimited(res.status, notes, "Nasdaq")) {
-        notes.push(`Nasdaq returned ${res.status} for ${symbol}.`);
-      }
+      notes.push(`Reference price unavailable for ${symbol} (${res.status}).`);
       return null;
     }
-    const json = (await res.json()) as {
-      data?: { summaryData?: { PreviousClose?: { value?: string } } };
-    };
-    const raw = json?.data?.summaryData?.PreviousClose?.value;
-    if (typeof raw !== "string") {
-      notes.push(`Nasdaq has no previous close for ${symbol}.`);
+
+    const raw = (await res.json()) as unknown;
+    if (!Array.isArray(raw) || raw.length === 0) {
+      notes.push(`No external market data published for ${symbol}.`);
       return null;
     }
-    // Values arrive formatted, e.g. "$1,692.59".
-    const parsed = Number.parseFloat(raw.replace(/[$,]/g, ""));
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      notes.push(`Nasdaq has no previous close for ${symbol}.`);
+
+    // `start` is a UTC wall-clock string, e.g. "2026-09-14 05:00:00".
+    const candles = (raw as { start: string; close: string }[])
+      .map((c) => ({
+        t: Date.parse(`${c.start.replace(" ", "T")}Z`),
+        close: Number.parseFloat(c.close),
+      }))
+      .filter((c) => Number.isFinite(c.t) && Number.isFinite(c.close) && c.close > 0)
+      .sort((a, b) => a.t - b.t);
+
+    if (candles.length === 0) {
+      notes.push(`No usable external prices for ${symbol}.`);
       return null;
     }
-    return parsed;
+
+    // The most recent session that has actually finished.
+    const now = Date.now();
+    const lastClosed = [...openWindows].reverse().find((w) => w.to <= now);
+
+    if (lastClosed) {
+      const atClose = [...candles].reverse().find((c) => c.t <= lastClosed.to);
+      if (atClose) return atClose.close;
+    }
+
+    // No completed session in range (long weekend, holiday run): the latest
+    // print is still the last thing the traditional market said.
+    return candles[candles.length - 1].close;
   } catch {
-    notes.push("Could not reach Nasdaq.");
+    notes.push("Could not reach the reference-price source.");
     return null;
   }
 }
@@ -212,8 +242,15 @@ export async function GET(
     ? null
     : token.referenceSymbol;
 
+  // Windows are derived first: the reference close is defined as the last
+  // print at or before the most recent completed session.
+  const openWindows =
+    chain.length > 0 && referenceSymbol
+      ? await fetchOpenWindows(chain[0].t, chain[chain.length - 1].t, revalidate, notes)
+      : [];
+
   const previousClose = referenceSymbol
-    ? await fetchPreviousClose(referenceSymbol, notes)
+    ? await fetchPreviousClose(referenceSymbol, openWindows, notes)
     : (notes.push("No verified traditional-market listing for this token."), null);
 
   const body: PriceResponse = {
@@ -221,6 +258,7 @@ export async function GET(
     chain,
     previousClose,
     referenceSymbol,
+    openWindows,
     notes,
   };
 
