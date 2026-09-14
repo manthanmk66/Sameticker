@@ -189,6 +189,11 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
               US market open
             </span>
           )}
+          {close == null && (data?.notes?.length ?? 0) > 0 && (
+            <span className="normal-case tracking-normal text-muted-foreground">
+              {data?.notes[0]}
+            </span>
+          )}
           {maxGap && (
             <span className={maxGap.abs >= 0 ? "text-risk-low" : "text-risk-high"}>
               Max divergence {maxGap.pct >= 0 ? "+" : ""}

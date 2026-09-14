@@ -30,6 +30,8 @@ export type PriceResponse = {
   /** Last traditional-market close, or null when unavailable. */
   previousClose: number | null;
   referenceSymbol: string | null;
+  /** Underlying shares per token, when the issuer states it. */
+  sharesPerToken: number | null;
   /** Regular-session windows inside the chart range — when the reference
    *  price was actually live. Empty when the calendar is unavailable. */
   openWindows: Window[];
@@ -38,7 +40,12 @@ export type PriceResponse = {
 };
 
 type Pool = {
-  attributes?: { address?: string; name?: string; reserve_in_usd?: string };
+  attributes?: {
+    address?: string;
+    name?: string;
+    reserve_in_usd?: string;
+    volume_usd?: { h24?: string };
+  };
 };
 
 /**
@@ -54,13 +61,20 @@ function pickPool(pools: Pool[]): string | null {
     (p.attributes?.name ?? "").split("/").pop()?.trim().toUpperCase() ?? "";
   const liquidityOf = (p: Pool) =>
     Number.parseFloat(p.attributes?.reserve_in_usd ?? "0") || 0;
+  const volumeOf = (p: Pool) =>
+    Number.parseFloat(p.attributes?.volume_usd?.h24 ?? "0") || 0;
 
   const preferred = named.filter((p) => STABLE_QUOTES.has(quoteOf(p)));
   const candidates = preferred.length > 0 ? preferred : named;
 
-  return candidates.reduce((best, p) =>
-    liquidityOf(p) > liquidityOf(best) ? p : best,
-  ).attributes!.address!;
+  // Rank by what actually trades. A deep pool nobody touches quotes a stale
+  // price; picking it by reserve alone is how a chart goes days out of date.
+  const traded = candidates.filter((p) => volumeOf(p) > 0);
+  const pool = (traded.length > 0 ? traded : candidates).reduce((best, p) => {
+    const score = traded.length > 0 ? volumeOf : liquidityOf;
+    return score(p) > score(best) ? p : best;
+  });
+  return pool.attributes!.address!;
 }
 
 function rateLimited(status: number, notes: string[], who: string): boolean {
@@ -249,15 +263,32 @@ export async function GET(
       ? await fetchOpenWindows(chain[0].t, chain[chain.length - 1].t, revalidate, notes)
       : [];
 
-  const previousClose = referenceSymbol
-    ? await fetchPreviousClose(referenceSymbol, openWindows, notes)
-    : (notes.push("No verified traditional-market listing for this token."), null);
+  // Comparing a token price to a share price only means something once you
+  // know how many shares a token is. PreStocks SPACEX trades near 5x the
+  // post-split share price; without the ratio that reads as a 300% premium
+  // rather than what it is. Unverified ratio, no reference line.
+  const sharesPerToken = isUnverified(token.sharesPerToken)
+    ? null
+    : (token.sharesPerToken as number);
+
+  let previousClose: number | null = null;
+  if (!referenceSymbol) {
+    notes.push("No verified traditional-market listing for this token.");
+  } else if (sharesPerToken === null) {
+    notes.push(
+      "Shares per token not yet verified, so this token's price cannot be compared to the underlying.",
+    );
+  } else {
+    const close = await fetchPreviousClose(referenceSymbol, openWindows, notes);
+    previousClose = close === null ? null : close * sharesPerToken;
+  }
 
   const body: PriceResponse = {
     ticker: token.ticker,
     chain,
     previousClose,
     referenceSymbol,
+    sharesPerToken,
     openWindows,
     notes,
   };

@@ -24,7 +24,12 @@ const { tokens } = parseTokenFile(raw);
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 type Pool = {
-  attributes?: { address?: string; name?: string; reserve_in_usd?: string };
+  attributes?: {
+    address?: string;
+    name?: string;
+    reserve_in_usd?: string;
+    volume_usd?: { h24?: string };
+  };
 };
 
 const pools: Record<string, { pool: string; name: string; liquidityUsd: number }> = {};
@@ -57,6 +62,8 @@ for (const token of tokens) {
       (p.attributes?.name ?? "").split("/").pop()?.trim().toUpperCase() ?? "";
     const liquidity = (p: Pool) =>
       Number.parseFloat(p.attributes?.reserve_in_usd ?? "0") || 0;
+    const volume = (p: Pool) =>
+      Number.parseFloat(p.attributes?.volume_usd?.h24 ?? "0") || 0;
 
     const preferred = candidates.filter((p) => STABLE.has(quote(p)));
     const list = preferred.length > 0 ? preferred : candidates;
@@ -65,11 +72,17 @@ for (const token of tokens) {
       break;
     }
 
-    const best = list.reduce((a, b) => (liquidity(b) > liquidity(a) ? b : a));
+    // Rank by traded volume, not parked liquidity: a deep untouched pool
+    // quotes a stale price.
+    const traded = list.filter((p) => volume(p) > 0);
+    const pickFrom = traded.length > 0 ? traded : list;
+    const score = traded.length > 0 ? volume : liquidity;
+    const best = pickFrom.reduce((a, b) => (score(b) > score(a) ? b : a));
     pools[token.mintAddress] = {
       pool: best.attributes!.address!,
       name: best.attributes!.name ?? "",
       liquidityUsd: Math.round(liquidity(best)),
+      volumeUsd24h: Math.round(volume(best)),
     };
     console.log(
       `  ${token.ticker.padEnd(10)} ${best.attributes!.name?.padEnd(20)} $${liquidity(best).toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
