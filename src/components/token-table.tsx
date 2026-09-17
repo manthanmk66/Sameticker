@@ -8,6 +8,7 @@ import {
   redeemableLabel,
   type Token,
 } from "@/lib/tokens";
+import type { MintAuthority } from "@/lib/mint-authority";
 import { RiskBadge } from "./risk-badge";
 import { OwnershipCard } from "./ownership-card";
 
@@ -46,7 +47,13 @@ function sortValue(token: Token, key: SortKey): string | number {
   }
 }
 
-export function TokenTable({ tokens }: { tokens: Token[] }) {
+export function TokenTable({
+  tokens,
+  authorities,
+}: {
+  tokens: Token[];
+  authorities: Record<string, MintAuthority>;
+}) {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({
     key: "company",
     dir: 1,
@@ -176,7 +183,10 @@ export function TokenTable({ tokens }: { tokens: Token[] }) {
 
               {open && (
                 <div id={`ownership-${token.id}`}>
-                  <OwnershipCard token={token} />
+                  <OwnershipCard
+                    token={token}
+                    authority={authorities[token.mintAddress]}
+                  />
                 </div>
               )}
             </li>

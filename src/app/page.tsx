@@ -4,7 +4,11 @@ import { TokenTable } from "@/components/token-table";
 import { GapChartLazy } from "@/components/gap-chart-lazy";
 import { SiteFooter } from "@/components/site-footer";
 import { site } from "@/lib/site";
+import { fetchMintAuthorities } from "@/lib/mint-authority";
 import { getToken, tokenFile, tokens } from "@/lib/tokens";
+
+/** One RPC call an hour covers every mint on the page. */
+export const revalidate = 3600;
 
 /**
  * S2 · Hanging — the heading floats in negative space above its section.
@@ -31,7 +35,7 @@ function SectionHead({
   );
 }
 
-export default function Home() {
+export default async function Home() {
   const [aId, bId] = site.heroPair;
   const a = getToken(aId);
   const b = getToken(bId);
@@ -40,6 +44,13 @@ export default function Home() {
   if (!a || !b) {
     throw new Error(`site.heroPair references unknown token id: ${!a ? aId : bId}`);
   }
+
+  // One getMultipleAccounts call for all 15 mints. Returns {} if the RPC is
+  // unreachable, and the cards simply omit the section.
+  const authorities = await fetchMintAuthorities(
+    tokens.map((t) => t.mintAddress),
+    revalidate,
+  );
 
   const siblings = tokens.filter((t) => t.company === a.company);
   const issuerCount = new Set(tokens.map((t) => t.issuer)).size;
@@ -72,7 +83,7 @@ export default function Home() {
               row. Anything we could not confirm from source reads &ldquo;Not yet
               verified&rdquo; rather than being hidden or guessed.
             </SectionHead>
-            <TokenTable tokens={tokens} />
+            <TokenTable tokens={tokens} authorities={authorities} />
           </section>
 
           <section className="pt-[var(--space-2xl)] sm:pt-[var(--space-3xl)]">

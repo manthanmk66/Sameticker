@@ -8,6 +8,7 @@ import {
   redeemableLabel,
   type Token,
 } from "@/lib/tokens";
+import type { MintAuthority } from "@/lib/mint-authority";
 import { NoSourceBadge } from "./risk-badge";
 
 /**
@@ -70,7 +71,134 @@ function SourceList({ label, urls }: { label: string; urls: string[] }) {
   );
 }
 
-export function OwnershipCard({ token }: { token: Token }) {
+function Power({
+  label,
+  holder,
+  consequence,
+}: {
+  label: string;
+  holder: string | null;
+  consequence: string;
+}) {
+  const held = Boolean(holder);
+  return (
+    <div className="rule-top py-3">
+      <dt className="flex items-baseline justify-between gap-3 font-mono text-[length:var(--text-xs)] uppercase tracking-[var(--tracking-label)]">
+        <span className="text-muted-foreground">{label}</span>
+        <span className={held ? "text-risk-high" : "text-risk-low"}>
+          {held ? "Yes" : "No"}
+        </span>
+      </dt>
+      <dd className="mt-1.5 text-[length:var(--text-sm)] leading-relaxed text-ink-2">
+        {held ? consequence : "No key holds this power."}
+      </dd>
+      {holder && (
+        <dd className="mt-1 break-all font-mono text-[length:var(--text-xs)] text-muted-foreground">
+          {holder}
+        </dd>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Read live from the mint, not from tokens.json. Kept visually separate from
+ * the fields above because the provenance is different in kind: everything
+ * else is a human reading a document, this is the chain answering for itself.
+ */
+function OnChainControl({ authority }: { authority: MintAuthority }) {
+  const { distinctControllers: keys, multiplier, pendingMultiplier } = authority;
+  const dividend = multiplier != null && multiplier !== 1 ? (multiplier - 1) * 100 : null;
+
+  return (
+    <div className="mt-6">
+      <h4 className="font-mono text-[length:var(--text-xs)] uppercase tracking-[var(--tracking-label)] text-primary">
+        What the chain says
+      </h4>
+      <p className="mt-2 max-w-[62ch] text-[length:var(--text-sm)] leading-relaxed text-muted-foreground">
+        Read from the mint account just now. Four control powers sit behind every
+        Token-2022 stock;{" "}
+        <span className="text-ink-2">
+          {keys === 0
+            ? "none are held here"
+            : keys === 1
+              ? "all of the ones in use here are held by a single key"
+              : `the ones in use here are split across ${keys} keys`}
+        </span>
+        .
+      </p>
+
+      <dl className="mt-3 grid gap-x-8 sm:grid-cols-2">
+        <Power
+          label="Can freeze your account"
+          holder={authority.freezeAuthority}
+          consequence="This key can freeze your token account, making the position untransferable."
+        />
+        <Power
+          label="Can take your tokens"
+          holder={authority.permanentDelegate}
+          consequence="Permanent delegate: this key can move tokens out of any wallet without the holder's signature."
+        />
+        <Power
+          label="Can halt all transfers"
+          holder={authority.pauseAuthority}
+          consequence={
+            authority.paused
+              ? "This key can pause every transfer of this token. It is paused right now."
+              : "This key can pause every transfer of this token globally."
+          }
+        />
+        <Power
+          label="Can gate transfers later"
+          holder={authority.transferHookAuthority}
+          consequence={
+            authority.transferHookProgram
+              ? `A transfer hook program is installed and runs on every transfer: ${authority.transferHookProgram}`
+              : "No hook program is installed yet, but this key can install one that runs on — and can block — every transfer."
+          }
+        />
+        {authority.defaultAccountState === "frozen" && (
+          <Field
+            label="New accounts"
+            value="Start frozen — the issuer must act before a new holder can transfer."
+            className="sm:col-span-2"
+          />
+        )}
+        {dividend !== null && (
+          <div className="rule-top py-3 sm:col-span-2">
+            <dt className="font-mono text-[length:var(--text-xs)] uppercase tracking-[var(--tracking-label)] text-muted-foreground">
+              Dividends paid by rebasing
+            </dt>
+            <dd className="mt-1.5 text-[length:var(--text-sm)] leading-relaxed text-ink-2">
+              Balance multiplier is{" "}
+              <span className="font-mono">{authority.multiplier}</span> — this token
+              has credited{" "}
+              <span className="text-primary">{dividend.toFixed(3)}%</span> in
+              dividends by raising holders&rsquo; balances rather than sending
+              anything. No transaction appears in your wallet history.
+              {pendingMultiplier && (
+                <>
+                  {" "}A further change to{" "}
+                  <span className="font-mono">{pendingMultiplier.value}</span> is
+                  already scheduled on-chain for{" "}
+                  {new Date(pendingMultiplier.effective * 1000).toLocaleString()}.
+                </>
+              )}
+            </dd>
+          </div>
+        )}
+      </dl>
+    </div>
+  );
+}
+
+export function OwnershipCard({
+  token,
+  authority,
+}: {
+  token: Token;
+  authority?: MintAuthority;
+}) {
   const mintMissing = token.mintAddress === NEEDS_INPUT;
 
   return (
@@ -156,6 +284,8 @@ export function OwnershipCard({ token }: { token: Token }) {
         <SourceList label="Sources read" urls={token.sources} />
         <SourceList label="Mint address read from" urls={token.mintSources} />
       </dl>
+
+      {authority && <OnChainControl authority={authority} />}
     </div>
   );
 }
