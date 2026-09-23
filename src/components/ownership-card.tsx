@@ -112,9 +112,9 @@ function OnChainControl({ authority }: { authority: MintAuthority }) {
 
   return (
     <div className="mt-6">
-      <h4 className="font-mono text-[length:var(--text-xs)] uppercase tracking-[var(--tracking-label)] text-primary">
+      <h3 className="font-mono text-[length:var(--text-xs)] uppercase tracking-[var(--tracking-label)] text-primary">
         What the chain says
-      </h4>
+      </h3>
       <p className="mt-2 max-w-[62ch] text-[length:var(--text-sm)] leading-relaxed text-muted-foreground">
         Read from the mint account just now. Four control powers sit behind every
         Token-2022 stock;{" "}
@@ -215,9 +215,9 @@ function IssuerFigures({ asset }: { asset: PreStocksAsset }) {
   const discounted = asset.discountPct < 0;
   return (
     <div className="mt-6">
-      <h4 className="font-mono text-[length:var(--text-xs)] uppercase tracking-[var(--tracking-label)] text-primary">
+      <h3 className="font-mono text-[length:var(--text-xs)] uppercase tracking-[var(--tracking-label)] text-primary">
         What the issuer publishes
-      </h4>
+      </h3>
       <p className="mt-2 max-w-[62ch] text-[length:var(--text-sm)] leading-relaxed text-muted-foreground">
         PreStocks publishes both the value its SPV marks the underlying exposure
         at and the price the token actually trades at. The gap is theirs, not
