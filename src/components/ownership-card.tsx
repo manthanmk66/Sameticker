@@ -9,6 +9,7 @@ import {
   type Token,
 } from "@/lib/tokens";
 import type { MintAuthority } from "@/lib/mint-authority";
+import type { PreStocksAsset } from "@/lib/prestocks";
 import { NoSourceBadge } from "./risk-badge";
 
 /**
@@ -108,7 +109,6 @@ function Power({
  */
 function OnChainControl({ authority }: { authority: MintAuthority }) {
   const { distinctControllers: keys, multiplier, pendingMultiplier } = authority;
-  const dividend = multiplier != null && multiplier !== 1 ? (multiplier - 1) * 100 : null;
 
   return (
     <div className="mt-6">
@@ -164,28 +164,97 @@ function OnChainControl({ authority }: { authority: MintAuthority }) {
             className="sm:col-span-2"
           />
         )}
-        {dividend !== null && (
+        {multiplier !== null && multiplier !== 1 && (
           <div className="rule-top py-3 sm:col-span-2">
             <dt className="font-mono text-[length:var(--text-xs)] uppercase tracking-[var(--tracking-label)] text-muted-foreground">
-              Dividends paid by rebasing
+              Balances are rebased
             </dt>
-            <dd className="mt-1.5 text-[length:var(--text-sm)] leading-relaxed text-ink-2">
-              Balance multiplier is{" "}
-              <span className="font-mono">{authority.multiplier}</span> — this token
-              has credited{" "}
-              <span className="text-primary">{dividend.toFixed(3)}%</span> in
-              dividends by raising holders&rsquo; balances rather than sending
-              anything. No transaction appears in your wallet history.
+            <dd className="mt-1.5 max-w-[62ch] text-[length:var(--text-sm)] leading-relaxed text-ink-2">
+              Every balance of this token is scaled by{" "}
+              <span className="font-mono text-primary">{multiplier}</span>. Your
+              wallet shows the scaled figure; the raw balance on-chain never
+              moved, and no transaction appears in your history.
               {pendingMultiplier && (
                 <>
-                  {" "}A further change to{" "}
+                  {" "}A change to{" "}
                   <span className="font-mono">{pendingMultiplier.value}</span> is
                   already scheduled on-chain for{" "}
                   {new Date(pendingMultiplier.effective * 1000).toLocaleString()}.
                 </>
               )}
             </dd>
+            <dd className="mt-1.5 max-w-[62ch] text-[length:var(--text-sm)] leading-relaxed text-muted-foreground">
+              Issuers use this one field for both dividend reinvestment and stock
+              splits, so the multiplier alone does not say which it was. A
+              fractional value is usually reinvested dividends; a whole number is
+              usually a split.
+            </dd>
           </div>
+        )}
+      </dl>
+    </div>
+  );
+}
+
+const money = (n: number) =>
+  n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
+
+const big = (n: number) =>
+  n >= 1e12
+    ? `$${(n / 1e12).toFixed(2)}T`
+    : n >= 1e9
+      ? `$${(n / 1e9).toFixed(2)}B`
+      : money(n);
+
+/**
+ * The issuer's own numbers, kept separate from both the curated fields and
+ * the chain read. Three provenances, three sections: what a human read, what
+ * the chain proves, what the issuer states about itself.
+ */
+function IssuerFigures({ asset }: { asset: PreStocksAsset }) {
+  const discounted = asset.discountPct < 0;
+  return (
+    <div className="mt-6">
+      <h4 className="font-mono text-[length:var(--text-xs)] uppercase tracking-[var(--tracking-label)] text-primary">
+        What the issuer publishes
+      </h4>
+      <p className="mt-2 max-w-[62ch] text-[length:var(--text-sm)] leading-relaxed text-muted-foreground">
+        PreStocks publishes both the value its SPV marks the underlying exposure
+        at and the price the token actually trades at. The gap is theirs, not
+        ours.
+      </p>
+
+      <dl className="mt-3 grid gap-x-8 sm:grid-cols-2">
+        <Field label="SPV mark price" value={money(asset.markPrice)} mono />
+        <Field label="Token trades at" value={money(asset.tokenPrice)} mono />
+        <div className="rule-top py-3 sm:col-span-2">
+          <dt className="font-mono text-[length:var(--text-xs)] uppercase tracking-[var(--tracking-label)] text-muted-foreground">
+            Token vs the issuer&rsquo;s own mark
+          </dt>
+          <dd
+            className={cn(
+              "mt-1.5 font-mono text-[length:var(--text-lg)]",
+              discounted ? "text-risk-high" : "text-risk-low",
+            )}
+          >
+            {asset.discountPct > 0 ? "+" : ""}
+            {asset.discountPct.toFixed(2)}%
+          </dd>
+          <dd className="mt-1.5 max-w-[62ch] text-[length:var(--text-sm)] leading-relaxed text-ink-2">
+            {discounted
+              ? "The market pays less for the token than the issuer says the exposure behind it is worth."
+              : "The market pays more for the token than the issuer says the exposure behind it is worth."}
+          </dd>
+        </div>
+        {asset.markValuation !== null && (
+          <Field label="Valuation at mark" value={big(asset.markValuation)} mono />
+        )}
+        {asset.impliedValuation !== null && (
+          <Field
+            label="Valuation implied by the token"
+            value={big(asset.impliedValuation)}
+            mono
+          />
         )}
       </dl>
     </div>
@@ -195,9 +264,11 @@ function OnChainControl({ authority }: { authority: MintAuthority }) {
 export function OwnershipCard({
   token,
   authority,
+  issuerFigures,
 }: {
   token: Token;
   authority?: MintAuthority;
+  issuerFigures?: PreStocksAsset;
 }) {
   const mintMissing = token.mintAddress === NEEDS_INPUT;
 
@@ -286,6 +357,7 @@ export function OwnershipCard({
       </dl>
 
       {authority && <OnChainControl authority={authority} />}
+      {issuerFigures && <IssuerFigures asset={issuerFigures} />}
     </div>
   );
 }

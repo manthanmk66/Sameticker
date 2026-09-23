@@ -9,6 +9,7 @@ import {
   type Token,
 } from "@/lib/tokens";
 import type { MintAuthority } from "@/lib/mint-authority";
+import type { PreStocksAsset } from "@/lib/prestocks";
 import { RiskBadge } from "./risk-badge";
 import { OwnershipCard } from "./ownership-card";
 
@@ -50,9 +51,11 @@ function sortValue(token: Token, key: SortKey): string | number {
 export function TokenTable({
   tokens,
   authorities,
+  issuerFigures,
 }: {
   tokens: Token[];
   authorities: Record<string, MintAuthority>;
+  issuerFigures: Record<string, PreStocksAsset>;
 }) {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({
     key: "company",
@@ -186,6 +189,7 @@ export function TokenTable({
                   <OwnershipCard
                     token={token}
                     authority={authorities[token.mintAddress]}
+                    issuerFigures={issuerFigures[token.mintAddress]}
                   />
                 </div>
               )}

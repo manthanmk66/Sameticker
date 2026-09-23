@@ -5,6 +5,7 @@ import { GapChartLazy } from "@/components/gap-chart-lazy";
 import { SiteFooter } from "@/components/site-footer";
 import { site } from "@/lib/site";
 import { fetchMintAuthorities } from "@/lib/mint-authority";
+import { fetchPreStocks } from "@/lib/prestocks";
 import { getToken, tokenFile, tokens } from "@/lib/tokens";
 
 /** One RPC call an hour covers every mint on the page. */
@@ -47,10 +48,13 @@ export default async function Home() {
 
   // One getMultipleAccounts call for all 15 mints. Returns {} if the RPC is
   // unreachable, and the cards simply omit the section.
-  const authorities = await fetchMintAuthorities(
-    tokens.map((t) => t.mintAddress),
-    revalidate,
-  );
+  const [authorities, issuerFigures] = await Promise.all([
+    fetchMintAuthorities(
+      tokens.map((t) => t.mintAddress),
+      revalidate,
+    ),
+    fetchPreStocks(revalidate),
+  ]);
 
   const siblings = tokens.filter((t) => t.company === a.company);
   const issuerCount = new Set(tokens.map((t) => t.issuer)).size;
@@ -83,7 +87,11 @@ export default async function Home() {
               row. Anything we could not confirm from source reads &ldquo;Not yet
               verified&rdquo; rather than being hidden or guessed.
             </SectionHead>
-            <TokenTable tokens={tokens} authorities={authorities} />
+            <TokenTable
+              tokens={tokens}
+              authorities={authorities}
+              issuerFigures={issuerFigures}
+            />
           </section>
 
           <section className="pt-[var(--space-2xl)] sm:pt-[var(--space-3xl)]">

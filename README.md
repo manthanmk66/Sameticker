@@ -112,6 +112,7 @@ keyless:
 | --- | --- | --- |
 | On-chain hourly price | [GeckoTerminal](https://api.geckoterminal.com) | Keyless. Burst-sensitive rate limit; see below. |
 | Traditional-market close | [Backpack Securities](https://docs.backpack.exchange/) | Keyless. `klines?source=External` — the external-market series, not Backpack's own tape. |
+| Issuer's own figures (PreStocks) | [prestocks.com/api/prestocks](https://prestocks.com/api/prestocks) | Keyless. SPV mark price vs actual token price — the discount stated by the issuer rather than inferred. |
 | Token-2022 mint state | [Solana RPC](https://api.mainnet-beta.solana.com) | Keyless. One `getMultipleAccounts` per hour covers every mint. Who can freeze, seize, pause or gate your tokens — read from the chain, not curated. |
 | US session calendar + holidays | [Backpack Securities](https://docs.backpack.exchange/) | Keyless. Real session hours, so the chart shades when the reference price was actually live. |
 
@@ -158,6 +159,7 @@ src/app/page.tsx                     three sections, top to bottom
 src/app/api/price/[ticker]/route.ts  GeckoTerminal + Backpack, cached 1h, never throws
 src/lib/market-sessions.ts           real US session windows (DST + holidays)
 src/lib/mint-authority.ts            Token-2022 control powers, read live from the chain
+src/lib/prestocks.ts                 the issuer's own mark vs traded price
 src/components/                      hero, table, ownership card, chart, footer
 ```
 
