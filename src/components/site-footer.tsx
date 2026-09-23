@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
+import { Logo } from "@/components/logo";
 
 /**
  * Ft5 · Statement — one display sentence closes the page, not a sitemap.
@@ -57,8 +58,11 @@ export function SiteFooter({
         </div>
 
         <div className="mt-[var(--space-xl)] flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-t border-rule pt-[var(--space-sm)]">
-          <span className="font-mono text-[length:var(--text-xs)] uppercase tracking-[0.18em] text-ink-2">
-            Same<span className="text-primary">Ticker</span>
+          <span className="flex items-center gap-2">
+            <Logo className="h-3.5 w-auto text-primary" />
+            <span className="font-mono text-[length:var(--text-xs)] uppercase tracking-[0.18em] text-ink-2">
+              Same<span className="text-primary">Ticker</span>
+            </span>
           </span>
           <span className="font-mono text-[length:var(--text-xs)] uppercase tracking-[var(--tracking-label)] text-muted-foreground">
             Updated {formatted}

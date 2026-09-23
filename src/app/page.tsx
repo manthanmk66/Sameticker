@@ -4,6 +4,8 @@ import { TokenTable } from "@/components/token-table";
 import { GapChartLazy } from "@/components/gap-chart-lazy";
 import { SiteFooter } from "@/components/site-footer";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Logo } from "@/components/logo";
+import { Reveal } from "@/components/reveal";
 import { site } from "@/lib/site";
 import { fetchMintAuthorities } from "@/lib/mint-authority";
 import { fetchPreStocks } from "@/lib/prestocks";
@@ -65,8 +67,11 @@ export default async function Home() {
       {/* N9 · Edge-aligned minimal. The empty middle is the design; filling it
           with a link row would make the standard AI nav with extra steps. */}
       <header className="flex items-center justify-between gap-4 px-[var(--page-gutter)] py-5">
-        <span className="font-mono text-[length:var(--text-sm)] tracking-[0.18em] text-ink">
-          SAME<span className="text-primary">TICKER</span>
+        <span className="flex items-center gap-2.5">
+          <Logo className="h-4 w-auto text-primary" />
+          <span className="font-mono text-[length:var(--text-sm)] tracking-[0.18em] text-ink">
+            SAME<span className="text-primary">TICKER</span>
+          </span>
         </span>
         <div className="flex shrink-0 items-center gap-2">
         <ThemeToggle />
@@ -86,23 +91,31 @@ export default async function Home() {
           <HeroComparison pair={[a, b]} siblings={siblings} />
 
           <section>
+            <Reveal>
             <SectionHead title="What you actually own">
               Every token whose documents we have read. Sort any column, open any
               row. Anything we could not confirm from source reads &ldquo;Not yet
               verified&rdquo; rather than being hidden or guessed.
             </SectionHead>
+            </Reveal>
+            <Reveal delay={0.06}>
             <TokenTable
               tokens={tokens}
               authorities={authorities}
               issuerFigures={issuerFigures}
             />
+            </Reveal>
           </section>
 
           <section className="pt-[var(--space-2xl)] sm:pt-[var(--space-3xl)]">
-            <SectionHead title="The weekend gap">
-              On-chain price against the last traditional-market close.
-            </SectionHead>
-            <GapChartLazy tokens={tokens} />
+            <Reveal>
+              <SectionHead title="The weekend gap">
+                On-chain price against the last traditional-market close.
+              </SectionHead>
+            </Reveal>
+            <Reveal delay={0.06}>
+              <GapChartLazy tokens={tokens} />
+            </Reveal>
           </section>
         </div>
       </main>

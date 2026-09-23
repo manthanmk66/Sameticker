@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import type { PriceResponse } from "@/app/api/price/[ticker]/route";
 import type { Token } from "@/lib/tokens";
+import { Counter } from "./counter";
 
 const CAPTION =
   "Traditional markets are closed nights and weekends. Tokenized stocks trade around the clock. During those hours the on-chain price is set by on-chain liquidity alone. This is context, not a trade signal: on most issuers only qualified, KYC-verified investors can mint or redeem, so retail cannot close this gap.";
@@ -212,8 +213,7 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
           )}
           {maxGap && (
             <span className={maxGap.abs >= 0 ? "text-risk-low" : "text-risk-high"}>
-              Max divergence {maxGap.pct >= 0 ? "+" : ""}
-              {maxGap.pct.toFixed(2)}%
+              Max divergence <Counter value={maxGap.pct} />
             </span>
           )}
         </div>

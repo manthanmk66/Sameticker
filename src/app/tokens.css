@@ -50,6 +50,7 @@
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --dur-micro: 120ms;
   --dur-short: 220ms;
+  --dur-long: 420ms;
 }
 
 /* ── LIGHT · default. Paper tinted cool so it reads as the same system

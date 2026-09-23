@@ -18,14 +18,28 @@ export default function OpengraphImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "#191a1f",
+          background: "#22262E",
           color: "#ebebee",
           padding: "72px 80px",
           fontFamily: "ui-monospace, monospace",
         }}
       >
-        <div style={{ display: "flex", fontSize: 26, letterSpacing: 4, color: "#e8b84b" }}>
-          SAMETICKER
+        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          {/* The mark, drawn as boxes: one solid, one hollow. */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ display: "flex", width: 22, height: 72, background: "#5B8BA8" }} />
+            <div
+              style={{
+                display: "flex",
+                width: 22,
+                height: 72,
+                border: "5px solid #5B8BA8",
+              }}
+            />
+          </div>
+          <div style={{ display: "flex", fontSize: 26, letterSpacing: 4, color: "#5B8BA8" }}>
+            SAMETICKER
+          </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
@@ -38,7 +52,7 @@ export default function OpengraphImage() {
               fontSize: 92,
               fontWeight: 600,
               letterSpacing: -2,
-              color: "#e8b84b",
+              color: "#5B8BA8",
             }}
           >
             Different deal.

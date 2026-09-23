@@ -233,3 +233,21 @@ h3,
     animation: none !important;
   }
 }
+
+/* Reveal — the visible state is the default, so markup without JavaScript
+   reads normally. The script opts in by setting data-reveal="pending". */
+[data-reveal] {
+  transition:
+    opacity var(--dur-long, 420ms) var(--ease-out),
+    transform var(--dur-long, 420ms) var(--ease-out);
+}
+
+[data-reveal="pending"] {
+  opacity: 0;
+  transform: translateY(14px);
+}
+
+[data-reveal="shown"] {
+  opacity: 1;
+  transform: none;
+}
