@@ -23,12 +23,23 @@ const STABLE_QUOTES = new Set(["USDC", "USDT", "USD", "SOL", "WSOL"]);
 
 export type PricePoint = { t: number; price: number };
 
+/** The underlying's price at the same instant, where the market had set one. */
+export type ReferencePoint = { t: number; price: number };
+
 export type PriceResponse = {
   ticker: string;
   /** On-chain price history, oldest first. Empty when unavailable. */
   chain: PricePoint[];
   /** Last traditional-market close, or null when unavailable. */
   previousClose: number | null;
+  /**
+   * The underlying's own price series over the same window, carried forward
+   * through the hours the market was shut. Divergence is measured against
+   * this, not against a single close: over a week where the underlying moved
+   * 20%, comparing Monday's on-chain print to Friday's close measures the
+   * stock, not the wrapper.
+   */
+  reference: ReferencePoint[];
   referenceSymbol: string | null;
   /** Underlying shares per token, when the issuer states it. */
   sharesPerToken: number | null;
@@ -166,20 +177,15 @@ async function fetchChainHistory(mint: string, notes: string[]): Promise<PricePo
 }
 
 /**
- * The last traditional-market close, from Backpack Securities' public klines
+ * The underlying's hourly price series from Backpack Securities' public klines
  * with `source=External` — the external-market series, not Backpack's own tape.
  *
- * Taken as the last print at or before the most recent *completed* regular
- * session, so the reference line is genuinely "the last close" rather than
- * whatever the feed happened to carry overnight.
- *
- * Returns null on failure.
+ * Returns [] on failure.
  */
-async function fetchPreviousClose(
+async function fetchReferenceSeries(
   symbol: string,
-  openWindows: Window[],
   notes: string[],
-): Promise<number | null> {
+): Promise<ReferencePoint[]> {
   const startTime = Math.floor(Date.now() / 1000) - (HOURS + 48) * 60 * 60;
   const url =
     `${BACKPACK}/klines?symbol=${encodeURIComponent(`${symbol}.US_USDC`)}` +
@@ -192,45 +198,55 @@ async function fetchPreviousClose(
     });
     if (!res.ok) {
       notes.push(`Reference price unavailable for ${symbol} (${res.status}).`);
-      return null;
+      return [];
     }
 
     const raw = (await res.json()) as unknown;
-    if (!Array.isArray(raw) || raw.length === 0) {
+    if (!Array.isArray(raw)) {
       notes.push(`No external market data published for ${symbol}.`);
-      return null;
+      return [];
     }
 
     // `start` is a UTC wall-clock string, e.g. "2026-09-14 05:00:00".
-    const candles = (raw as { start: string; close: string }[])
+    const points = (raw as { start: string; close: string }[])
       .map((c) => ({
         t: Date.parse(`${c.start.replace(" ", "T")}Z`),
-        close: Number.parseFloat(c.close),
+        price: Number.parseFloat(c.close),
       }))
-      .filter((c) => Number.isFinite(c.t) && Number.isFinite(c.close) && c.close > 0)
+      .filter((c) => Number.isFinite(c.t) && Number.isFinite(c.price) && c.price > 0)
       .sort((a, b) => a.t - b.t);
 
-    if (candles.length === 0) {
-      notes.push(`No usable external prices for ${symbol}.`);
-      return null;
-    }
-
-    // The most recent session that has actually finished.
-    const now = Date.now();
-    const lastClosed = [...openWindows].reverse().find((w) => w.to <= now);
-
-    if (lastClosed) {
-      const atClose = [...candles].reverse().find((c) => c.t <= lastClosed.to);
-      if (atClose) return atClose.close;
-    }
-
-    // No completed session in range (long weekend, holiday run): the latest
-    // print is still the last thing the traditional market said.
-    return candles[candles.length - 1].close;
+    if (points.length === 0) notes.push(`No usable external prices for ${symbol}.`);
+    return points;
   } catch {
     notes.push("Could not reach the reference-price source.");
-    return null;
+    return [];
   }
+}
+
+/**
+ * Aligns the reference series onto the chain's timestamps, carrying the last
+ * known price forward. Outside market hours the underlying has no new price,
+ * so the line goes flat — which is exactly the gap this chart is about.
+ */
+function alignReference(
+  chain: PricePoint[],
+  series: ReferencePoint[],
+  sharesPerToken: number,
+): ReferencePoint[] {
+  if (series.length === 0) return [];
+  const out: ReferencePoint[] = [];
+  let i = 0;
+  let last: number | null = null;
+
+  for (const point of chain) {
+    while (i < series.length && series[i].t <= point.t) {
+      last = series[i].price;
+      i += 1;
+    }
+    if (last !== null) out.push({ t: point.t, price: last * sharesPerToken });
+  }
+  return out;
 }
 
 export async function GET(
@@ -272,6 +288,7 @@ export async function GET(
     : (token.sharesPerToken as number);
 
   let previousClose: number | null = null;
+  let reference: ReferencePoint[] = [];
   if (!referenceSymbol) {
     notes.push("No verified traditional-market listing for this token.");
   } else if (sharesPerToken === null) {
@@ -279,14 +296,23 @@ export async function GET(
       "Shares per token not yet verified, so this token's price cannot be compared to the underlying.",
     );
   } else {
-    const close = await fetchPreviousClose(referenceSymbol, openWindows, notes);
-    previousClose = close === null ? null : close * sharesPerToken;
+    const series = await fetchReferenceSeries(referenceSymbol, notes);
+    reference = alignReference(chain, series, sharesPerToken);
+
+    // The flat line still marks the last price the traditional market actually
+    // set; the series is what divergence is measured against.
+    const lastClosed = [...openWindows].reverse().find((w) => w.to <= Date.now());
+    const atClose = lastClosed
+      ? [...series].reverse().find((p) => p.t <= lastClosed.to)
+      : series[series.length - 1];
+    previousClose = atClose ? atClose.price * sharesPerToken : null;
   }
 
   const body: PriceResponse = {
     ticker: token.ticker,
     chain,
     previousClose,
+    reference,
     referenceSymbol,
     sharesPerToken,
     openWindows,

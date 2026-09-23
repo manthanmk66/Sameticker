@@ -6,7 +6,6 @@ import {
   ComposedChart,
   ReferenceArea,
   Line,
-  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -25,7 +24,14 @@ import type { Token } from "@/lib/tokens";
 const CAPTION =
   "Traditional markets are closed nights and weekends. Tokenized stocks trade around the clock. During those hours the on-chain price is set by on-chain liquidity alone. This is context, not a trade signal: on most issuers only qualified, KYC-verified investors can mint or redeem, so retail cannot close this gap.";
 
-type Row = { t: number; price: number };
+type Row = {
+  t: number;
+  price: number;
+  /** The underlying at the same instant, where the market had set a price. */
+  ref?: number;
+  /** [ref, price] — Recharts renders a tuple as a band between the two. */
+  band?: [number, number];
+};
 
 function usd(n: number): string {
   return n.toLocaleString("en-US", {
@@ -87,20 +93,29 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
       };
     }
 
-    const rows: Row[] = chain.map((p) => ({ t: p.t, price: p.price }));
+    const refAt = new Map((data?.reference ?? []).map((r) => [r.t, r.price]));
+    const rows: Row[] = chain.map((p) => {
+      const ref = refAt.get(p.t);
+      return ref === undefined
+        ? { t: p.t, price: p.price }
+        : { t: p.t, price: p.price, ref, band: [ref, p.price] as [number, number] };
+    });
 
+    // Measured point against contemporaneous point. Comparing every print to
+    // one closing price would report the underlying's own weekly move as if it
+    // were a wrapper dislocation.
     let maxGap: { pct: number; abs: number; t: number } | null = null;
-    if (pc) {
-      for (const p of chain) {
-        const abs = p.price - pc;
-        if (!maxGap || Math.abs(abs) > Math.abs(maxGap.abs)) {
-          maxGap = { abs, pct: (abs / pc) * 100, t: p.t };
-        }
+    for (const r of rows) {
+      if (r.ref === undefined) continue;
+      const abs = r.price - r.ref;
+      if (!maxGap || Math.abs(abs) > Math.abs(maxGap.abs)) {
+        maxGap = { abs, pct: (abs / r.ref) * 100, t: r.t };
       }
     }
     // The axis is zoomed to the data: anchoring it at zero would flatten a
     // few percent of divergence into a flat line.
     const values = chain.map((p) => p.price);
+    for (const r of rows) if (r.ref !== undefined) values.push(r.ref);
     if (pc) values.push(pc);
     const lo = Math.min(...values);
     const hi = Math.max(...values);
@@ -174,13 +189,14 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
             <span aria-hidden className="h-px w-4 bg-primary" />
             On-chain {data?.ticker}
           </span>
-          {close != null && (
+          {(data?.reference?.length ?? 0) > 0 && (
             <span className="flex items-center gap-1.5 text-muted-foreground">
               <span
                 aria-hidden
                 className="h-px w-4 border-t border-dashed border-muted-foreground"
               />
-              {data?.referenceSymbol} close {usd(close)}
+              {data?.referenceSymbol} underlying
+              {close != null && <> · last close {usd(close)}</>}
             </span>
           )}
           {(data?.openWindows?.length ?? 0) > 0 && (
@@ -243,9 +259,11 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
                   fontFamily: "var(--font-mono)",
                 }}
                 labelFormatter={(t) => new Date(Number(t)).toLocaleString()}
-                formatter={(value, name) =>
-                  name === "price" ? [usd(Number(value)), "On-chain"] : null
-                }
+                formatter={(value, name) => {
+                  if (name === "price") return [usd(Number(value)), "On-chain"];
+                  if (name === "ref") return [usd(Number(value)), "Underlying"];
+                  return null;
+                }}
               />
               {/* Real regular-session windows from the issuer's own calendar —
                   holidays and DST included. Everything unshaded is time when
@@ -265,25 +283,25 @@ export function GapChart({ tokens }: { tokens: Token[] }) {
               {/* Shades the region between the on-chain line and the close.
                   baseValue anchors the fill to the reference price, so the
                   band reads on both sides when the price crosses it. */}
-              {close != null && (
-                <Area
-                  dataKey="price"
-                  baseValue={close}
-                  stroke="none"
-                  fill="var(--color-accent)"
-                  fillOpacity={0.16}
-                  isAnimationActive={false}
-                  activeDot={false}
-                  legendType="none"
-                />
-              )}
-              {close != null && (
-                <ReferenceLine
-                  y={close}
-                  stroke="var(--color-muted)"
-                  strokeDasharray="4 4"
-                />
-              )}
+              <Area
+                dataKey="band"
+                stroke="none"
+                fill="var(--color-accent)"
+                fillOpacity={0.16}
+                isAnimationActive={false}
+                activeDot={false}
+                legendType="none"
+                connectNulls={false}
+              />
+              <Line
+                dataKey="ref"
+                stroke="var(--color-muted)"
+                strokeWidth={1.25}
+                strokeDasharray="4 3"
+                dot={false}
+                isAnimationActive={false}
+                connectNulls={false}
+              />
               <Line
                 dataKey="price"
                 stroke="var(--color-accent)"
